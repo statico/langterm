@@ -1,0 +1,32 @@
+{
+  "scripts": {
+    "-- MAIN COMMANDS --------------------------------------------": "",
+    "clean": "rm -rfv build && mkdir -p build",
+    "build": "npm run -s build-html && npm run -s build-css && npm run -s build-js-dev && npm run -s build-images && osx-notifier --type pass --message 'Done.'",
+    "serve": "cd build && http-server -o build",
+    "deploy": "bin/deploy",
+    "-- SUBCOMMANDS ----------------------------------------------": "",
+    "build-html": "mkdir -p build && find src -name '*.pug' -not -name '_*' | xargs pug --out build && cp src/robots.txt build",
+    "build-css": "cleancss --debug --skip-rebase --output build/main.css src/vendor/*.css src/*.css",
+    "build-js": "uglifyjs -o build/main.js src/vendor/*.js src/js/*.js",
+    "build-js-dev": "cat src/vendor/*.js src/js/*.js >build/main.js",
+    "build-images": "cp -rv src/images build && cp -v src/favicon* build"
+  },
+  "name": "langterm",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Ian's terminal",
+  "author": "Ian Langworth <ian@langworth.com>",
+  "dependencies": {
+    "clean-css": "3.4.19",
+    "coffee-script": "1.10.0",
+    "http-server": "0.9.0",
+    "nodemon": "1.10.2",
+    "osx-notifier": "0.2.2",
+    "pug": "2.0.0-beta5",
+    "pug-cli": "1.0.0-alpha6",
+    "shelljs": "0.7.3",
+    "uglify-js": "2.7.0"
+  },
+  "devDependencies": {}
+}

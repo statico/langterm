@@ -1,0 +1,11 @@
+build
+data.json
+.DS_Store
+*.swp
+*.pyc
+node_modules
+npm-debug.log
+*~
+.#*
+\#*#
+.DS_Store
