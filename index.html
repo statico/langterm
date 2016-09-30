@@ -35,20 +35,34 @@ uniform vec2 uGridSize;
 attribute vec2 aPosition;
 attribute float aChar;
 varying vec2 vCharCoord;
+varying vec2 vArea;
 
 const float padding = 0.1;
 
 void main() {
-  vec2 pos = aPosition;
-  pos = pos * (1.0 - padding * 2.0) + padding;
+  float k = aPosition.y;
+  vec2 char = vec2(aPosition.x, 0);
+  if (k == 1.0) char.x += 1.0;
+  if (k == 2.0) char.y += 1.0;
+
+  vec2 pos = char;
+  if (k == 1.0) pos.x += 1.0;
+  if (k == 2.0) pos.y += 1.0;
+  pos *= (1.0 - padding * 2.0) + padding;
   pos = (pos / uGridSize * 2.0) - 1.0;
-  pos.y = pos.y * -1.0;
+  pos.y *= -1.0;
   gl_Position = vec4(pos, 0, 1);
 
   float i = aChar - 32.0;
-  float u = mod(i, 10.0) / 10.0 - 0.01;
-  float v = floor(i/10.0) / 10.0 - 0.01;
-  vCharCoord = vec2(u + aPosition.x/10.0, v + aPosition.y/10.0);
+  float u = mod(i, 10.0) / 10.0;
+  float v = floor(i/10.0) / 10.0;
+  vCharCoord = vec2(u + char.x/10.0, v + char.y/10.0);
+  if (k == 1.0) vCharCoord.x += 0.1;
+  if (k == 2.0) vCharCoord.y += 0.1;
+
+  vArea = vec2(0.0, 0.0);
+  if (k == 1.0) vArea.x += 2.0;
+  if (k == 2.0) vArea.y += 2.0;
 }
 </script>
 
@@ -60,9 +74,13 @@ precision mediump float;
 uniform float time;
 uniform sampler2D uImage;
 varying vec2 vCharCoord;
+varying vec2 vArea;
 
 void main() {
-  gl_FragColor = texture2D(uImage, vCharCoord);
+  vec4 color = texture2D(uImage, vCharCoord);
+  //if (color.r < 0.9) discard;
+  if (vArea.x > 1.0 || vArea.y > 1.0) discard;
+  gl_FragColor = color;
 }
 </script>
 
@@ -124,15 +142,12 @@ function init() {
     throw "Cannot create WebGL context.";
   }
 
-  temp = new Float32Array(len*12);
+  temp = new Float32Array(len*6);
   for (i = 0; i < len; i++) {
-    var j = i * 12;
-    temp[j+0] = i;      temp[j+1] = 0;
-    temp[j+2] = i + 1;  temp[j+3] = 0;
-    temp[j+4] = i;      temp[j+5] = 1;
-    temp[j+6] = i + 1;  temp[j+7] = 0;
-    temp[j+8] = i;      temp[j+9] = 1;
-    temp[j+10] = i + 1; temp[j+11] = 1;
+    var j = i * 6;
+    temp[j+0] = i; temp[j+1] = 0;
+    temp[j+2] = i; temp[j+3] = 1;
+    temp[j+4] = i; temp[j+5] = 2;
   }
   console.log(temp);
   buffer = gl.createBuffer();
@@ -141,16 +156,11 @@ function init() {
 
   charBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
-  temp = new Float32Array(len*6);
+  temp = new Float32Array(len*3);
   for (i = 0; i < len; i++) {
-    var j = i * 6;
+    var j = i * 3;
     var c = message.charCodeAt(i);
-    temp[j+0] = c;
-    temp[j+1] = c;
-    temp[j+2] = c;
-    temp[j+3] = c;
-    temp[j+4] = c;
-    temp[j+5] = c;
+    temp[j+0] = temp[j+1] = temp[j+2] = c;
   }
   console.log(temp);
   gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
@@ -268,7 +278,7 @@ function render() {
   gl.vertexAttribPointer(charLocation, 1, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(charLocation);
 
-  gl.drawArrays(gl.TRIANGLES, 0, len*6);
+  gl.drawArrays(gl.TRIANGLES, 0, len*3);
 
   gl.disableVertexAttribArray(positionLocation);
   gl.disableVertexAttribArray(charLocation);
