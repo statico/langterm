@@ -20,24 +20,16 @@ uniform vec2 gridSize;
 attribute vec2 position;
 
 void main() {
+  vec2 pos = position;
 
-  float padding = 0.1;
+  // Add padding
+  pos = pos * 0.8 + 0.1;
 
-  // convert the position from pixels to 0.0 to W/H
-  vec2 zeroToOne = position / gridSize;
+  // Convert to clip space
+  pos = (pos / gridSize * 2.0) - 1.0;
+  pos.y = pos.y * -1.0;
 
-  // convert from 0->1 to 0->2
-  vec2 zeroToTwo = zeroToOne * 2.0;
-
-  // convert from 0->2 to -1->+1 (clipspace)
-  vec2 clipSpace = zeroToTwo - 1.0;
-
-  // flip the y coords
-  clipSpace.y = clipSpace.y * -1.0;
-
-  gl_Position = vec4(clipSpace, 0, 1);
-
-  //gl_Position = vec4(position, 1.0, 1.0);
+  gl_Position = vec4(pos, 0, 1);
 }
 </script>
 
