@@ -17,7 +17,7 @@ canvas { width: 100%; height: 100%; }
 <script id="vs" type="x-shader/vertex">
 uniform vec2 screenSize;
 uniform vec2 gridSize;
-attribute vec3 position;
+attribute vec2 position;
 
 void main() {
 
@@ -38,7 +38,7 @@ void main() {
   gl_Position = vec4(clipSpace, 0, 1);
   */
 
-  gl_Position = vec4(position, 1.0);
+  gl_Position = vec4(position, 1.0, 1.0);
 }
 </script>
 
@@ -112,9 +112,9 @@ function init() {
   buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        0, 0, 1,
-        1, 0, 1,
-        0, 1, 1
+        0, 0,
+        1, 0,
+        0, 1
   ]), gl.STATIC_DRAW);
 
   // Create Program
@@ -213,7 +213,7 @@ function render() {
 
   // Render geometry
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(positionLocation);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
   gl.disableVertexAttribArray(positionLocation);
