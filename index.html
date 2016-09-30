@@ -40,17 +40,11 @@ const float padding = 0.1;
 
 void main() {
   vec2 pos = aPosition;
-
-  // Add padding
   pos = pos * (1.0 - padding * 2.0) + padding;
-
-  // Convert to clip space
   pos = (pos / uGridSize * 2.0) - 1.0;
   pos.y = pos.y * -1.0;
-
   gl_Position = vec4(pos, 0, 1);
 
-  // Calculate char position
   float i = aChar - 32.0;
   float u = mod(i, 10.0) / 10.0 - 0.01;
   float v = floor(i/10.0) / 10.0 - 0.01;
@@ -104,8 +98,8 @@ var canvas,
     time: 0,
     screenWidth: 0,
     screenHeight: 0,
-    gridWidth: 4,
-    gridHeight: 2
+    gridWidth: 20,
+    gridHeight: 20
   };
 
 var image = new Image();
@@ -114,6 +108,8 @@ image.onload = function() {
   init();
   animate();
 };
+
+var i, temp, message = "hello", len = message.length;
 
 function init() {
   vertex_shader = document.getElementById('vs').textContent;
@@ -128,20 +124,36 @@ function init() {
     throw "Cannot create WebGL context.";
   }
 
+  temp = new Float32Array(len*12);
+  for (i = 0; i < len; i++) {
+    var j = i * 12;
+    temp[j+0] = i;      temp[j+1] = 0;
+    temp[j+2] = i + 1;  temp[j+3] = 0;
+    temp[j+4] = i;      temp[j+5] = 1;
+    temp[j+6] = i + 1;  temp[j+7] = 0;
+    temp[j+8] = i;      temp[j+9] = 1;
+    temp[j+10] = i + 1; temp[j+11] = 1;
+  }
+  console.log(temp);
   buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        0, 0,   1, 0,   0, 1,
-        1, 0,   0, 1,   1, 1,
-  ]), gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
 
-  var message = "hello";
   charBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(
-        [104.0, 104.0, 104.0, 104.0, 104.0, 104.0] // h
-        //message.split('').map(function(c){ return c.charCodeAt(0); })
-  ), gl.STATIC_DRAW);
+  temp = new Float32Array(len*6);
+  for (i = 0; i < len; i++) {
+    var j = i * 6;
+    var c = message.charCodeAt(i);
+    temp[j+0] = c;
+    temp[j+1] = c;
+    temp[j+2] = c;
+    temp[j+3] = c;
+    temp[j+4] = c;
+    temp[j+5] = c;
+  }
+  console.log(temp);
+  gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
 
   // Font image
   var texture = gl.createTexture();
@@ -256,7 +268,7 @@ function render() {
   gl.vertexAttribPointer(charLocation, 1, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(charLocation);
 
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
+  gl.drawArrays(gl.TRIANGLES, 0, len*6);
 
   gl.disableVertexAttribArray(positionLocation);
   gl.disableVertexAttribArray(charLocation);
