@@ -54,11 +54,11 @@ void main() {
   gl_Position = vec4(pos, 0, 1);
 
   float i = aChar - 32.0;
-  float u = mod(i, 10.0) / 10.0;
-  float v = floor(i/10.0) / 10.0;
-  vCharCoord = vec2(u + char.x/10.0, v + char.y/10.0);
-  if (k == 1.0) vCharCoord.x += 0.1;
-  if (k == 2.0) vCharCoord.y += 0.1;
+  float col = mod(i, 10.0) / 10.0;
+  float row = floor(i/10.0) / 10.0;
+  vCharCoord = vec2(col, row);
+  if (k == 1.0) vCharCoord.x += 0.11;
+  if (k == 2.0) vCharCoord.y += 0.11;
 
   vArea = vec2(0.0, 0.0);
   if (k == 1.0) vArea.x += 2.0;
