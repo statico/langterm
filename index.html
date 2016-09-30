@@ -21,10 +21,7 @@ attribute vec2 position;
 
 void main() {
 
-/*
   float padding = 0.1;
-  float cellWidth = (1.0 - padding * 2.0) / gridSize.x;
-  float cellHeight = (1.0 - padding * 2.0) / gridSize.y;
 
   // convert the position from pixels to 0.0 to W/H
   vec2 zeroToOne = position / gridSize;
@@ -35,10 +32,12 @@ void main() {
   // convert from 0->2 to -1->+1 (clipspace)
   vec2 clipSpace = zeroToTwo - 1.0;
 
-  gl_Position = vec4(clipSpace, 0, 1);
-  */
+  // flip the y coords
+  clipSpace.y = clipSpace.y * -1.0;
 
-  gl_Position = vec4(position, 1.0, 1.0);
+  gl_Position = vec4(clipSpace, 0, 1);
+
+  //gl_Position = vec4(position, 1.0, 1.0);
 }
 </script>
 
