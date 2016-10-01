@@ -178,7 +178,8 @@ term.addString('hello!*');
 
 (function() {
   window.addEventListener('keydown', function(e) {
-    if (!(e.shiftKey || e.altKey || e.ctrlKey || e.metaKey)) term.addChar(e.key);
+    if (!(e.altKey || e.ctrlKey || e.metaKey) && e.key !== 'Shift') term.addChar(e.key);
+    //console.log(e.key);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
