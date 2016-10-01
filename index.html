@@ -149,7 +149,6 @@ function init() {
     temp[j+2] = i; temp[j+3] = 1;
     temp[j+4] = i; temp[j+5] = 2;
   }
-  console.log(temp);
   buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
   gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
@@ -162,7 +161,6 @@ function init() {
     var c = message.charCodeAt(i);
     temp[j+0] = temp[j+1] = temp[j+2] = c;
   }
-  console.log(temp);
   gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
 
   // Font image
@@ -235,20 +233,19 @@ function createShader(src, type) {
 
 }
 
-function resizeCanvas(event) {
-  if (canvas.width != canvas.clientWidth || canvas.height != canvas.clientHeight) {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-
-    parameters.screenWidth = canvas.width;
-    parameters.screenHeight = canvas.height;
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
+function resize() {
+  var r = window.devicePixelRatio || 1;
+  var w = Math.floor(gl.canvas.clientWidth  * r);
+  var h = Math.floor(gl.canvas.clientHeight * r);
+  if (canvas.width != w || canvas.height != h) {
+    canvas.width = parameters.screenWidth = w;
+    canvas.height = parameters.screenHeight = h;
+    gl.viewport(0, 0, w, h);
   }
 }
 
 function animate() {
-  resizeCanvas();
+  resize();
   render();
   requestAnimationFrame(animate);
 }
