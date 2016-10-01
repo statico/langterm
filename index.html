@@ -54,11 +54,11 @@ void main() {
   gl_Position = vec4(pos, 0, 1);
 
   float i = aChar - 32.0;
-  float col = mod(i, 10.0) / 10.0;
-  float row = floor(i/10.0) / 10.0;
+  float col = mod(i, 16.0) / 16.0;
+  float row = floor(i/16.0) / 16.0;
   vCharCoord = vec2(col, row);
-  if (k == 1.0) vCharCoord.x += 0.2;
-  if (k == 2.0) vCharCoord.y += 0.2;
+  if (k == 1.0) vCharCoord.x += 2.0/16.0;
+  if (k == 2.0) vCharCoord.y += 2.0/16.0;
 
   vArea = vec2(0.0, 0.0);
   if (k == 1.0) vArea.x += 2.0;
@@ -78,7 +78,7 @@ varying vec2 vArea;
 
 void main() {
   vec4 color = texture2D(uImage, vCharCoord);
-  //if (color.r < 0.9) discard;
+  if (color.r < 0.9) discard;
   if (vArea.x > 1.0 || vArea.y > 1.0) discard;
   gl_FragColor = color;
 }
@@ -121,7 +121,7 @@ var canvas,
   };
 
 var image = new Image();
-image.src = 'font.jpg';
+image.src = 'apple2font.png';
 image.onload = function() {
   init();
   animate();
