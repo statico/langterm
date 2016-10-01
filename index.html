@@ -86,6 +86,97 @@ void main() {
 
 <script>
 
+var Terminal = (function() {
+
+  function Terminal() {
+    this.width = 40;
+    this.height = 24;
+    this.cursor = { x: 0, y: 0 };
+    var a = this.width * this.height;
+    this.buffer = new Array(a);
+    this._charBuffer = new Float32Array(a * 3);
+    this._geoBuffer = new Float32Array(a * 6);
+    this.clear();
+  }
+
+  Terminal.prototype.clear = function() {
+    this.cursor.x = 0;
+    this.cursor.y = 0;
+    for (var i = 0, len = this.buffer.length; i < len; i++) {
+      this.buffer[i] = ' ';
+    }
+    this._dirty = true;
+  };
+
+  Terminal.prototype.addString = function(s) {
+    s.split('').forEach(this.addChar.bind(this));
+  };
+
+  Terminal.prototype.addChar = function(c) {
+    this.buffer[this.cursor.y * this.width + this.cursor.x] = c;
+    if (this.cursor >= this.width - 1) {
+      this.cursor.x = 0;
+      this.cursor.y++;
+    } else {
+      this.cursor.x++;
+    }
+    if (this.cursor.y >= this.width) {
+      this.cursor.y--;
+      var lastLine = this.buffer.length - this.width;
+      for (var i = 0, len = this.buffer.length; i < len; i++) {
+        if (i < lastLine) {
+          this.buffer[i] = this.buffer[i + this.width];
+        } else {
+          this.buffer[i] = ' ';
+        }
+      }
+    }
+    this._dirty = true;
+  };
+
+  Terminal.prototype._update = function() {
+    if (!this._dirty) return;
+    for (var i = 0, len = this.buffer.length; i < len; i++) {
+      var j = i * 3, c = this.buffer[i].charCodeAt(0);
+      this._charBuffer[j+0] = c;
+      this._charBuffer[j+1] = c;
+      this._charBuffer[j+2] = c;
+      j = i * 6;
+      this._geoBuffer[j+0] = i;
+      this._geoBuffer[j+1] = 0;
+      this._geoBuffer[j+2] = i;
+      this._geoBuffer[j+3] = 1;
+      this._geoBuffer[j+4] = i;
+      this._geoBuffer[j+5] = 2;
+    }
+  };
+
+  Terminal.prototype.getCharBuffer = function() {
+    this._update();
+    return this._charBuffer;
+  };
+
+  Terminal.prototype.getGeoBuffer = function() {
+    this._update();
+    return this._geoBuffer;
+  };
+
+  Terminal.prototype.toString = function() {
+    var out = new Array(this.buffer.length);
+    for (var i = 0, len = this.buffer.length; i < len; i++) {
+      out[i] = this.buffer[i] + (i !== 0 && i % this.width == 0 ? '\n' : '');
+    }
+    return out.join('');
+  };
+
+  return Terminal;
+
+})();
+
+var term = new Terminal();
+term.addString('hello!*');
+console.log(term.toString());
+
 /**
  * Provides requestAnimationFrame in a cross browser way.
  * paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -142,26 +233,13 @@ function init() {
     throw "Cannot create WebGL context.";
   }
 
-  temp = new Float32Array(len*6);
-  for (i = 0; i < len; i++) {
-    var j = i * 6;
-    temp[j+0] = i; temp[j+1] = 0;
-    temp[j+2] = i; temp[j+3] = 1;
-    temp[j+4] = i; temp[j+5] = 2;
-  }
   buffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
 
   charBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
-  temp = new Float32Array(len*3);
-  for (i = 0; i < len; i++) {
-    var j = i * 3;
-    var c = message.charCodeAt(i);
-    temp[j+0] = temp[j+1] = temp[j+2] = c;
-  }
-  gl.bufferData(gl.ARRAY_BUFFER, temp, gl.STATIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
 
   // Font image
   var texture = gl.createTexture();
@@ -275,7 +353,7 @@ function render() {
   gl.vertexAttribPointer(charLocation, 1, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(charLocation);
 
-  gl.drawArrays(gl.TRIANGLES, 0, len*3);
+  gl.drawArrays(gl.TRIANGLES, 0, term.buffer.length * 3);
 
   gl.disableVertexAttribArray(positionLocation);
   gl.disableVertexAttribArray(charLocation);
