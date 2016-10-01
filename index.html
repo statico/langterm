@@ -175,7 +175,17 @@ var Terminal = (function() {
 
 var term = new Terminal();
 term.addString('hello!*');
-console.log(term.toString());
+
+(function() {
+  window.addEventListener('keydown', function(e) {
+    if (!(e.shiftKey || e.altKey || e.ctrlKey || e.metaKey)) term.addChar(e.key);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
+  });
+  window.focus();
+})();
 
 /**
  * Provides requestAnimationFrame in a cross browser way.
@@ -217,8 +227,6 @@ image.onload = function() {
   init();
   animate();
 };
-
-var i, temp, message = "hello*123", len = message.length;
 
 function init() {
   vertex_shader = document.getElementById('vs').textContent;
