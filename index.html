@@ -30,6 +30,11 @@ canvas { width: 100%; height: 100%; }
 <script src="gl-matrix-min.js"><</script>
 
 <script id="vs" type="x-shader/vertex">
+#ifdef GL_ES
+precision mediump float;
+#endif
+
+uniform float uTime;
 uniform vec2 uScreenSize;
 uniform vec2 uGridSize;
 attribute vec2 aPosition;
@@ -58,18 +63,22 @@ void main() {
   pos.y *= -1.0;
   gl_Position = vec4(pos, 0, 1);
 
-  float i = aCharInfo.x - 32.0;
-  float col = mod(i, 16.0) / 16.0;
-  float row = floor(i/16.0) / 16.0;
-  vCharCoord = vec2(col, row);
-  if (k == 1.0) vCharCoord.x += 2.0/16.0;
-  if (k == 2.0) vCharCoord.y += 2.0/16.0;
-
   vArea = vec2(0.0, 0.0);
   if (k == 1.0) vArea.x += 2.0;
   if (k == 2.0) vArea.y += 2.0;
 
   vAttr = aCharInfo.y;
+
+  float i = aCharInfo.x - 32.0;
+  float col = mod(i, 16.0) / 16.0;
+  float row = floor(i/16.0) / 16.0;
+  if (mod(vAttr / ATTR_CURSOR, 2.0) >= 1.0 && mod(uTime*3.5, 2.0) <= 1.0) {
+    col = 15.0/16.0;
+    row = 5.0/16.0;
+  }
+  vCharCoord = vec2(col, row);
+  if (k == 1.0) vCharCoord.x += 2.0/16.0;
+  if (k == 2.0) vCharCoord.y += 2.0/16.0;
 }
 </script>
 
@@ -78,7 +87,7 @@ void main() {
 precision mediump float;
 #endif
 
-uniform float time;
+uniform float uTime;
 uniform sampler2D uImage;
 varying vec2 vCharCoord;
 varying vec2 vArea;
@@ -167,6 +176,8 @@ var Terminal = (function() {
     if (!this._dirty) return;
     for (var i = 0, len = this.buffer.length; i < len; i++) {
       var j = i * 6, c = this.buffer[i].charCodeAt(0), a = this.attrs[i];
+      var y = Math.floor(i / this.buffer.length), x = i - y;
+      if (this.cursor.x === x && this.cursor.y === y) a |= Terminal.ATTR_CURSOR;
       this._charBuffer[j+0] = c;
       this._charBuffer[j+1] = a;
       this._charBuffer[j+2] = c;
@@ -247,7 +258,7 @@ var canvas,
   screenSizeLocation,
   gridSizeLocation,
   parameters = {
-    start_time: new Date().getTime(),
+    start_time: Date.now(),
     time: 0,
     screenWidth: 0,
     screenHeight: 0,
@@ -294,7 +305,7 @@ function init() {
 
   // Create Program
   currentProgram = createProgram(vertex_shader, fragment_shader);
-  timeLocation = gl.getUniformLocation(currentProgram, 'time');
+  timeLocation = gl.getUniformLocation(currentProgram, 'uTime');
   screenSizeLocation = gl.getUniformLocation(currentProgram, 'uScreenSize');
   gridSizeLocation = gl.getUniformLocation(currentProgram, 'uGridSize');
   positionLocation = gl.getAttribLocation(currentProgram, 'aPosition');
