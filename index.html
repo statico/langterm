@@ -63,8 +63,8 @@ void main() {
 
   // Pos converts the char coords to clip space.
   vec2 pos = char;
-  if (k == 1.0) pos.x += 1.0;
-  if (k == 2.0) pos.y += 1.0;
+  if (k == 1.0) pos.x += 1.3; // 1.0 works but these values result in
+  if (k == 2.0) pos.y += 0.7; // some better line spacing.
   pos *= (1.0 - padding * 2.0) + padding;
   pos = (pos / uGridSize * 2.0) - 1.0;
   pos.y *= -1.0;
