@@ -37,8 +37,8 @@ precision mediump float;
 uniform float uTime;
 uniform vec2 uScreenSize;
 uniform vec2 uGridSize;
-attribute vec2 aPosition;
-attribute vec2 aCharInfo;
+attribute vec2 aGeo;
+attribute vec2 aChar;
 varying vec2 vCharCoord;
 varying vec2 vArea;
 varying float vAttr;
@@ -50,11 +50,30 @@ const float ATTR_BLINK = 4.0;
 const float padding = 0.1;
 
 void main() {
-  float k = aPosition.y;
-  vec2 char = vec2(aPosition.x, 0);
+  // Geometry looks like this:
+  //
+  // ---------.
+  // |    |  /
+  // |    | /
+  // |____|/
+  // |    /
+  // |   /
+  // |  /
+  // | /
+  // |/
+
+  // Char is our character space triangle vertex. (0,0) means first col & row.
+  float k = aGeo.y;
+  vec2 char = vec2(aGeo.x, 0);
   if (k == 1.0) char.x += 1.0;
   if (k == 2.0) char.y += 1.0;
 
+  // Area is also a similar triangle, but used by the fragment shader.
+  vArea = vec2(0.0, 0.0);
+  if (k == 1.0) vArea.x += 2.0;
+  if (k == 2.0) vArea.y += 2.0;
+
+  // Pos converts the char coords to clip space.
   vec2 pos = char;
   if (k == 1.0) pos.x += 1.0;
   if (k == 2.0) pos.y += 1.0;
@@ -63,20 +82,20 @@ void main() {
   pos.y *= -1.0;
   gl_Position = vec4(pos, 0, 1);
 
-  vArea = vec2(0.0, 0.0);
-  if (k == 1.0) vArea.x += 2.0;
-  if (k == 2.0) vArea.y += 2.0;
+  // The second item of aChar is a bitmask of character attributes.
+  vAttr = aChar.y;
 
-  vAttr = aCharInfo.y;
-
-  float i = aCharInfo.x - 32.0;
+  // Calculate the 128x128px (16x16 grid) Apple 2 sprite map coords.
+  float i = aChar.x - 32.0;
   float col = mod(i, 16.0) / 16.0;
   float row = floor(i/16.0) / 16.0;
+  // If this char is the cursor, make it blink the cursor symbol.
   if (mod(vAttr / ATTR_CURSOR, 2.0) >= 1.0 && mod(uTime*3.5, 2.0) <= 1.0) {
     col = 15.0/16.0;
     row = 5.0/16.0;
   }
   vCharCoord = vec2(col, row);
+  // Remember, make a triangle, and make large enough to cover the character rectangle.
   if (k == 1.0) vCharCoord.x += 2.0/16.0;
   if (k == 2.0) vCharCoord.y += 2.0/16.0;
 }
@@ -102,11 +121,15 @@ const vec4 FG = vec4(1.0, 1.0, 1.0, 1.0);
 const float EPSILON = 0.006;
 
 void main() {
+  // Trim the triangle so we only draw the rectangle.
+  // Without EPSILON we get a few gaps in inversed lines.
   if (vArea.x > 1.0 + EPSILON || vArea.y > 1.0 + EPSILON) discard;
+
   bool value = texture2D(uImage, vCharCoord).r >= 1.0;
   bool inverse = mod(vAttr / ATTR_INVERSE, 2.0) >= 1.0;
   if (value && inverse) discard;
   if (!value && !inverse) discard;
+
   gl_FragColor = FG;
 }
 </script>
@@ -216,15 +239,18 @@ var Terminal = (function() {
 })();
 
 var term = new Terminal();
-term.addString('hello!*', Terminal.ATTR_INVERSE);
-term.addString('ok');
-console.log(term.getCharBuffer());
+//term.addString('hello!*', Terminal.ATTR_INVERSE);
+//term.addString('ok let\'s see how far this line wraps!');
+term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
+term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
+term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
+term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
 
 (function() {
   window.addEventListener('keydown', function(e) {
     if (!(e.altKey || e.ctrlKey || e.metaKey) && e.key !== 'Shift') term.addChar(e.key);
     //console.log(e.key);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
@@ -248,12 +274,12 @@ window.requestAnimationFrame = window.requestAnimationFrame || (function() {
 
 var canvas,
   gl,
-  buffer,
+  geoBuffer,
   charBuffer,
   charLocation,
   vertex_shader, fragment_shader,
   currentProgram,
-  positionLocation,
+  geoLocation,
   timeLocation,
   screenSizeLocation,
   gridSizeLocation,
@@ -286,8 +312,8 @@ function init() {
     throw "Cannot create WebGL context.";
   }
 
-  buffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  geoBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
 
   charBuffer = gl.createBuffer();
@@ -308,8 +334,8 @@ function init() {
   timeLocation = gl.getUniformLocation(currentProgram, 'uTime');
   screenSizeLocation = gl.getUniformLocation(currentProgram, 'uScreenSize');
   gridSizeLocation = gl.getUniformLocation(currentProgram, 'uGridSize');
-  positionLocation = gl.getAttribLocation(currentProgram, 'aPosition');
-  charLocation = gl.getAttribLocation(currentProgram, 'aCharInfo');
+  geoLocation = gl.getAttribLocation(currentProgram, 'aGeo');
+  charLocation = gl.getAttribLocation(currentProgram, 'aChar');
 }
 
 function createProgram(vertex, fragment) {
@@ -398,9 +424,9 @@ function render() {
   gl.uniform2f(gridSizeLocation, parameters.gridWidth, parameters.gridHeight);
 
   // Render geometry
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(positionLocation);
+  gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
+  gl.vertexAttribPointer(geoLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(geoLocation);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
   gl.vertexAttribPointer(charLocation, 2, gl.FLOAT, false, 0, 0);
@@ -408,7 +434,7 @@ function render() {
 
   gl.drawArrays(gl.TRIANGLES, 0, term.buffer.length * 3);
 
-  gl.disableVertexAttribArray(positionLocation);
+  gl.disableVertexAttribArray(geoLocation);
   gl.disableVertexAttribArray(charLocation);
 
 }
