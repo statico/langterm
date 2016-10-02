@@ -33,9 +33,14 @@ canvas { width: 100%; height: 100%; }
 uniform vec2 uScreenSize;
 uniform vec2 uGridSize;
 attribute vec2 aPosition;
-attribute float aChar;
+attribute vec2 aCharInfo;
 varying vec2 vCharCoord;
 varying vec2 vArea;
+varying float vAttr;
+
+const float ATTR_CURSOR = 1.0;
+const float ATTR_INVERSE = 2.0;
+const float ATTR_BLINK = 4.0;
 
 const float padding = 0.1;
 
@@ -53,7 +58,7 @@ void main() {
   pos.y *= -1.0;
   gl_Position = vec4(pos, 0, 1);
 
-  float i = aChar - 32.0;
+  float i = aCharInfo.x - 32.0;
   float col = mod(i, 16.0) / 16.0;
   float row = floor(i/16.0) / 16.0;
   vCharCoord = vec2(col, row);
@@ -63,6 +68,8 @@ void main() {
   vArea = vec2(0.0, 0.0);
   if (k == 1.0) vArea.x += 2.0;
   if (k == 2.0) vArea.y += 2.0;
+
+  vAttr = aCharInfo.y;
 }
 </script>
 
@@ -75,12 +82,23 @@ uniform float time;
 uniform sampler2D uImage;
 varying vec2 vCharCoord;
 varying vec2 vArea;
+varying float vAttr;
+
+const float ATTR_CURSOR = 1.0;
+const float ATTR_INVERSE = 2.0;
+const float ATTR_BLINK = 4.0;
+
+const vec4 FG = vec4(1.0, 1.0, 1.0, 1.0);
+
+const float EPSILON = 0.005;
 
 void main() {
-  vec4 color = texture2D(uImage, vCharCoord);
-  if (color.r < 0.9) discard;
-  if (vArea.x > 1.0 || vArea.y > 1.0) discard;
-  gl_FragColor = color;
+  if (vArea.x > 1.0 + EPSILON || vArea.y > 1.0 + EPSILON) discard;
+  bool value = texture2D(uImage, vCharCoord).r >= 1.0;
+  bool inverse = mod(vAttr / ATTR_INVERSE, 2.0) >= 1.0;
+  if (value && inverse) discard;
+  if (!value && !inverse) discard;
+  gl_FragColor = FG;
 }
 </script>
 
@@ -94,26 +112,35 @@ var Terminal = (function() {
     this.cursor = { x: 0, y: 0 };
     var a = this.width * this.height;
     this.buffer = new Array(a);
-    this._charBuffer = new Float32Array(a * 3);
+    this.attrs = new Array(a);
+    this._charBuffer = new Float32Array(a * 6);
     this._geoBuffer = new Float32Array(a * 6);
     this.clear();
   }
+
+  Terminal.ATTR_CURSOR = 1;
+  Terminal.ATTR_INVERSE = 2;
+  Terminal.ATTR_BLINK = 4;
 
   Terminal.prototype.clear = function() {
     this.cursor.x = 0;
     this.cursor.y = 0;
     for (var i = 0, len = this.buffer.length; i < len; i++) {
       this.buffer[i] = ' ';
+      this.attrs[i] = 0;
     }
     this._dirty = true;
   };
 
-  Terminal.prototype.addString = function(s) {
-    s.split('').forEach(this.addChar.bind(this));
+  Terminal.prototype.addString = function(s, attrs) {
+    var _this = this;
+    s.split('').forEach(function(c) { _this.addChar(c, attrs); });
   };
 
-  Terminal.prototype.addChar = function(c) {
-    this.buffer[this.cursor.y * this.width + this.cursor.x] = c;
+  Terminal.prototype.addChar = function(c, attrs) {
+    var i = this.cursor.y * this.width + this.cursor.x;
+    this.buffer[i] = c;
+    this.attrs[i] = attrs || 0;
     if (this.cursor >= this.width - 1) {
       this.cursor.x = 0;
       this.cursor.y++;
@@ -123,11 +150,13 @@ var Terminal = (function() {
     if (this.cursor.y >= this.width) {
       this.cursor.y--;
       var lastLine = this.buffer.length - this.width;
-      for (var i = 0, len = this.buffer.length; i < len; i++) {
+      for (i = 0, len = this.buffer.length; i < len; i++) {
         if (i < lastLine) {
           this.buffer[i] = this.buffer[i + this.width];
+          this.attrs[i] = this.attrs[i + this.width];
         } else {
           this.buffer[i] = ' ';
+          this.attrs[i] = 0;
         }
       }
     }
@@ -137,11 +166,13 @@ var Terminal = (function() {
   Terminal.prototype._update = function() {
     if (!this._dirty) return;
     for (var i = 0, len = this.buffer.length; i < len; i++) {
-      var j = i * 3, c = this.buffer[i].charCodeAt(0);
+      var j = i * 6, c = this.buffer[i].charCodeAt(0), a = this.attrs[i];
       this._charBuffer[j+0] = c;
-      this._charBuffer[j+1] = c;
+      this._charBuffer[j+1] = a;
       this._charBuffer[j+2] = c;
-      j = i * 6;
+      this._charBuffer[j+3] = a;
+      this._charBuffer[j+4] = c;
+      this._charBuffer[j+5] = a;
       this._geoBuffer[j+0] = i;
       this._geoBuffer[j+1] = 0;
       this._geoBuffer[j+2] = i;
@@ -174,7 +205,9 @@ var Terminal = (function() {
 })();
 
 var term = new Terminal();
-term.addString('hello!*');
+term.addString('hello!*', Terminal.ATTR_INVERSE);
+term.addString('ok');
+console.log(term.getCharBuffer());
 
 (function() {
   window.addEventListener('keydown', function(e) {
@@ -265,7 +298,7 @@ function init() {
   screenSizeLocation = gl.getUniformLocation(currentProgram, 'uScreenSize');
   gridSizeLocation = gl.getUniformLocation(currentProgram, 'uGridSize');
   positionLocation = gl.getAttribLocation(currentProgram, 'aPosition');
-  charLocation = gl.getAttribLocation(currentProgram, 'aChar');
+  charLocation = gl.getAttribLocation(currentProgram, 'aCharInfo');
 }
 
 function createProgram(vertex, fragment) {
@@ -359,7 +392,7 @@ function render() {
   gl.enableVertexAttribArray(positionLocation);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
-  gl.vertexAttribPointer(charLocation, 1, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribPointer(charLocation, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(charLocation);
 
   gl.drawArrays(gl.TRIANGLES, 0, term.buffer.length * 3);
