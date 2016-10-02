@@ -1,19 +1,4 @@
 <!doctype html>
-<!--
-
-     __ _____________  __  ___
-    / //_  __/ __/ _ \/  |/  / 28.8k bps \o/
-   / /__/ / / _// , _/ /|_/ /  vLink 1.359
-  /____/_/ /___/_/|_/_/  /_/   617-555-1337
-
-Username: ian
-Password: **********
-logging in....................
-Welcome session b6623a0fcc38cf68
-Type 'help' to get started
->
-
--->
 <html dir="ltr" lang="en-US">
 <head>
 <title>langterm</title>
@@ -142,8 +127,8 @@ void main() {
 var Terminal = (function() {
 
   function Terminal() {
-    this.width = 20;
-    this.height = 24;
+    this.width = 60;
+    this.height = 50;
     this.cursor = { x: 0, y: 0 };
     var a = this.width * this.height;
     this.buffer = new Array(a);
@@ -244,12 +229,18 @@ var Terminal = (function() {
 })();
 
 var term = new Terminal();
-//term.addString('hello!*', Terminal.ATTR_INVERSE);
-//term.addString('ok let\'s see how far this line wraps!');
-term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
-term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
-term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
-term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
+term.addString(
+"     __ _____________  __  ___                \n" +
+"    / //_  __/ __/ _ \\/  |/  / 28.8k bps \\o/\n" +
+"   / /__/ / / _// , _/ /|_/ /  vLink 1.359    \n" +
+"  /____/_/ /___/_/|_/_/  /_/   617-555-1337   \n" +
+"                                              \n" +
+"Username: ian                                 \n" +
+"Password: **********                          \n" +
+"logging in....................                \n" +
+"Welcome session b6623a0fcc38cf68              \n" +
+"Type 'help' to get started                    \n" +
+">");
 
 (function() {
   window.addEventListener('keydown', function(e) {
