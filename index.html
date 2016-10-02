@@ -142,7 +142,7 @@ void main() {
 var Terminal = (function() {
 
   function Terminal() {
-    this.width = 40;
+    this.width = 20;
     this.height = 24;
     this.cursor = { x: 0, y: 0 };
     var a = this.width * this.height;
@@ -174,15 +174,17 @@ var Terminal = (function() {
 
   Terminal.prototype.addChar = function(c, attrs) {
     var i = this.cursor.y * this.width + this.cursor.x;
-    this.buffer[i] = c;
-    this.attrs[i] = attrs || 0;
-    if (this.cursor >= this.width - 1) {
+    if (c !== '\n') {
+      this.buffer[i] = c;
+      this.attrs[i] = attrs || 0;
+    }
+    if (c === '\n' || this.cursor.x >= this.width - 1) {
       this.cursor.x = 0;
       this.cursor.y++;
     } else {
       this.cursor.x++;
     }
-    if (this.cursor.y >= this.width) {
+    if (this.cursor.y >= this.height) {
       this.cursor.y--;
       var lastLine = this.buffer.length - this.width;
       for (i = 0, len = this.buffer.length; i < len; i++) {
@@ -202,7 +204,7 @@ var Terminal = (function() {
     if (!this._dirty) return;
     for (var i = 0, len = this.buffer.length; i < len; i++) {
       var j = i * 6, c = this.buffer[i].charCodeAt(0), a = this.attrs[i];
-      var y = Math.floor(i / this.buffer.length), x = i - y;
+      var y = Math.floor(i / this.width), x = i - y * this.width;
       if (this.cursor.x === x && this.cursor.y === y) a |= Terminal.ATTR_CURSOR;
       this._charBuffer[j+0] = c;
       this._charBuffer[j+1] = a;
@@ -251,8 +253,9 @@ term.addChar('0', Terminal.ATTR_INVERSE); term.addString('123456789');
 
 (function() {
   window.addEventListener('keydown', function(e) {
-    if (!(e.altKey || e.ctrlKey || e.metaKey) && e.key !== 'Shift') term.addChar(e.key);
-    //console.log(e.key);
+    if (e.key.length === 1) term.addChar(e.key);
+    else if (e.keyCode === 13) term.addChar('\n');
+    else return;
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
@@ -291,8 +294,8 @@ var canvas,
     time: 0,
     screenWidth: 0,
     screenHeight: 0,
-    gridWidth: 20,
-    gridHeight: 20
+    gridWidth: term.width,
+    gridHeight: term.height
   };
 
 var image = new Image();
