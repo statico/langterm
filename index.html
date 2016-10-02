@@ -63,8 +63,11 @@ void main() {
   // |/
 
   // Char is our character space triangle vertex. (0,0) means first col & row.
-  float k = aGeo.y;
-  vec2 char = vec2(aGeo.x, 0);
+  float i = aGeo[0];
+  float row = floor(i/uGridSize.x);
+  float col = i - row * uGridSize.x;
+  vec2 char = vec2(col, row);
+  float k = aGeo[1];
   if (k == 1.0) char.x += 1.0;
   if (k == 2.0) char.y += 1.0;
 
@@ -83,12 +86,12 @@ void main() {
   gl_Position = vec4(pos, 0, 1);
 
   // The second item of aChar is a bitmask of character attributes.
-  vAttr = aChar.y;
+  vAttr = aChar[1];
 
   // Calculate the 128x128px (16x16 grid) Apple 2 sprite map coords.
-  float i = aChar.x - 32.0;
-  float col = mod(i, 16.0) / 16.0;
-  float row = floor(i/16.0) / 16.0;
+  i = aChar[0] - 32.0;
+  col = mod(i, 16.0) / 16.0;
+  row = floor(i/16.0) / 16.0;
   // If this char is the cursor, make it blink the cursor symbol.
   if (mod(vAttr / ATTR_CURSOR, 2.0) >= 1.0 && mod(uTime*3.5, 2.0) <= 1.0) {
     col = 15.0/16.0;
@@ -118,7 +121,7 @@ const float ATTR_BLINK = 4.0;
 
 const vec4 FG = vec4(1.0, 1.0, 1.0, 1.0);
 
-const float EPSILON = 0.006;
+const float EPSILON = 0.000;
 
 void main() {
   // Trim the triangle so we only draw the rectangle.
