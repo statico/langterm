@@ -100,7 +100,7 @@ precision mediump float;
 #endif
 
 uniform float uTime;
-uniform sampler2D uImage;
+uniform sampler2D uFont;
 varying vec2 vCharCoord;
 varying vec2 vArea;
 varying float vAttr;
@@ -118,7 +118,7 @@ void main() {
   // Without EPSILON we get a few gaps in inversed lines.
   if (vArea.x > 1.0 + EPSILON || vArea.y > 1.0 + EPSILON) discard;
 
-  bool value = texture2D(uImage, vCharCoord).r >= 1.0;
+  bool value = texture2D(uFont, vCharCoord).r >= 1.0;
   bool inverse = mod(vAttr / ATTR_INVERSE, 2.0) >= 1.0;
   if (value && inverse) discard;
   if (!value && !inverse) discard;
@@ -279,7 +279,9 @@ var canvas,
   geoBuffer,
   charBuffer,
   charLocation,
+  fontTex, fontTexLocation,
   vertex_shader, fragment_shader,
+  termTex, termFrameBuf,
   currentProgram,
   geoLocation,
   timeLocation,
@@ -317,27 +319,44 @@ function init() {
   geoBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   charBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   // Font image
-  var texture = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, texture);
+  fontTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, fontTex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+  gl.bindTexture(gl.TEXTURE_2D, null);
 
   // Create Program
   currentProgram = createProgram(vertex_shader, fragment_shader);
   timeLocation = gl.getUniformLocation(currentProgram, 'uTime');
   screenSizeLocation = gl.getUniformLocation(currentProgram, 'uScreenSize');
   gridSizeLocation = gl.getUniformLocation(currentProgram, 'uGridSize');
+  fontTexLocation = gl.getUniformLocation(currentProgram, 'uFont');
   geoLocation = gl.getAttribLocation(currentProgram, 'aGeo');
   charLocation = gl.getAttribLocation(currentProgram, 'aChar');
+
+  // Terminal framebuffer & texture
+  termFrameBuf = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, termFrameBuf);
+  termTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, termTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1024, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, termTex, 0);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
 }
 
 function createProgram(vertex, fragment) {
@@ -415,17 +434,19 @@ function render() {
 
   parameters.time = Date.now() - parameters.start_time;
 
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  // Load program into GPU
   gl.useProgram(currentProgram);
-
-  // Set values to program variables
   gl.uniform1f(timeLocation, parameters.time / 1000);
   gl.uniform2f(screenSizeLocation, parameters.screenWidth, parameters.screenHeight);
   gl.uniform2f(gridSizeLocation, parameters.gridWidth, parameters.gridHeight);
 
-  // Render geometry
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, fontTex);
+  gl.uniform1i(fontTexLocation, 0);
+
   gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
   gl.vertexAttribPointer(geoLocation, 2, gl.FLOAT, false, 0, 0);
   gl.enableVertexAttribArray(geoLocation);
