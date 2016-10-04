@@ -6,7 +6,7 @@
 <style type="text/css">
 html, body {
   background: #222; color: #eee; margin: 0; overflow: hidden; width: 100%; height: 100%;
-  XXXbackground-image: url('term.jpg');
+  background-image: url('term.jpg');
   background-size: cover;
   background-position: center;
 }
@@ -38,7 +38,6 @@ varying highp vec2 vTexCoord;
 
 void main(void) {
   gl_FragColor = texture2D(uTermTex, vTexCoord);
-  gl_FragColor.rgb += 0.3;
 }
 </script>
 
@@ -56,7 +55,7 @@ const float ATTR_CURSOR = 1.0;
 const float ATTR_INVERSE = 2.0;
 const float ATTR_BLINK = 4.0;
 
-const float PADDING = 0.1;
+const float PADDING = 0.01;
 
 void main() {
   // Geometry looks like this:
@@ -467,7 +466,7 @@ function resize() {
   var q = quat.create();
   quat.rotateY(q, q, glMatrix.toRadian(10));
   quat.rotateZ(q, q, glMatrix.toRadian(2));
-  mat4.fromRotationTranslation(compMVMatrix, q, [0, 0, -4.0]);
+  mat4.fromRotationTranslation(compMVMatrix, q, [0, 0, -3.5]);
 }
 
 function animate() {
