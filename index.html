@@ -19,7 +19,7 @@ canvas { width: 100%; height: 100%; }
 
 <script src="gl-matrix-min.js"><</script>
 
-<script id="vs" type="x-shader/vertex">
+<script id="term-vs" type="x-shader/vertex">
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -94,7 +94,7 @@ void main() {
 }
 </script>
 
-<script id="fs" type="x-shader/fragment">
+<script id="term-fs" type="x-shader/fragment">
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -280,9 +280,8 @@ var canvas,
   charBuffer,
   charLocation,
   fontTex, fontTexLocation,
-  vertex_shader, fragment_shader,
   termTex, termFrameBuf,
-  currentProgram,
+  termProgram,
   geoLocation,
   timeLocation,
   screenSizeLocation,
@@ -304,9 +303,6 @@ image.onload = function() {
 };
 
 function init() {
-  vertex_shader = document.getElementById('vs').textContent;
-  fragment_shader = document.getElementById('fs').textContent;
-
   canvas = document.querySelector('canvas');
 
   try {
@@ -337,13 +333,15 @@ function init() {
   gl.bindTexture(gl.TEXTURE_2D, null);
 
   // Create Program
-  currentProgram = createProgram(vertex_shader, fragment_shader);
-  timeLocation = gl.getUniformLocation(currentProgram, 'uTime');
-  screenSizeLocation = gl.getUniformLocation(currentProgram, 'uScreenSize');
-  gridSizeLocation = gl.getUniformLocation(currentProgram, 'uGridSize');
-  fontTexLocation = gl.getUniformLocation(currentProgram, 'uFont');
-  geoLocation = gl.getAttribLocation(currentProgram, 'aGeo');
-  charLocation = gl.getAttribLocation(currentProgram, 'aChar');
+  var vs = document.getElementById('term-vs').textContent;
+  var fs = document.getElementById('term-fs').textContent;
+  termProgram = createProgram(vs, fs);
+  timeLocation = gl.getUniformLocation(termProgram, 'uTime');
+  screenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize');
+  gridSizeLocation = gl.getUniformLocation(termProgram, 'uGridSize');
+  fontTexLocation = gl.getUniformLocation(termProgram, 'uFont');
+  geoLocation = gl.getAttribLocation(termProgram, 'aGeo');
+  charLocation = gl.getAttribLocation(termProgram, 'aChar');
 
   // Terminal framebuffer & texture
   termFrameBuf = gl.createFramebuffer();
@@ -360,55 +358,40 @@ function init() {
 }
 
 function createProgram(vertex, fragment) {
-
   var program = gl.createProgram();
-
   var vs = createShader(vertex, gl.VERTEX_SHADER);
   var fs = createShader(fragment, gl.FRAGMENT_SHADER);
 
   if (vs == null || fs == null) return null;
-
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
-
   gl.deleteShader(vs);
   gl.deleteShader(fs);
-
   gl.linkProgram(program);
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-
     throw new Error("ERROR:\n" +
       "VALIDATE_STATUS: " + gl.getProgramParameter(program, gl.VALIDATE_STATUS) + "\n" +
       "ERROR: " + gl.getError() + "\n" +
       "LOG: " + gl.getProgramInfoLog(program) + "\n\n" +
       "- Vertex Shader -\n" + vertex + "\n\n" +
       "- Fragment Shader -\n" + fragment);
-
     return null;
-
   }
 
   return program;
-
 }
 
 function createShader(src, type) {
-
   var shader = gl.createShader(type);
-
   gl.shaderSource(shader, src);
   gl.compileShader(shader);
 
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-
     throw new Error((type == gl.VERTEX_SHADER ? "VERTEX" : "FRAGMENT") + " SHADER:\n" + gl.getShaderInfoLog(shader));
     return null;
-
   }
-
   return shader;
-
 }
 
 function resize() {
@@ -429,8 +412,7 @@ function animate() {
 }
 
 function render() {
-
-  if (!currentProgram) return;
+  if (!termProgram) return;
 
   parameters.time = Date.now() - parameters.start_time;
 
@@ -438,7 +420,7 @@ function render() {
 
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-  gl.useProgram(currentProgram);
+  gl.useProgram(termProgram);
   gl.uniform1f(timeLocation, parameters.time / 1000);
   gl.uniform2f(screenSizeLocation, parameters.screenWidth, parameters.screenHeight);
   gl.uniform2f(gridSizeLocation, parameters.gridWidth, parameters.gridHeight);
