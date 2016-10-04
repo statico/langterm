@@ -19,11 +19,29 @@ canvas { width: 100%; height: 100%; }
 
 <script src="gl-matrix-min.js"><</script>
 
-<script id="term-vs" type="x-shader/vertex">
-#ifdef GL_ES
-precision mediump float;
-#endif
+<script id="comp-vs" type="x-shader/vertex">
+attribute vec3 aPosition;
+attribute vec2 aTexCoord;
+uniform mat4 uMVMatrix;
+uniform mat4 uPMatrix;
+varying vec2 uTexCoord;
 
+void main(void) {
+  gl_Position = uPMatrix * uMVMatrix * vec4(aPosition, 1.0);
+  uTexCoord = aTexCoord;
+}
+</script>
+
+<script id="comp-fs" type="x-shader/fragment">
+varying highp vec2 vTextureCoord;
+//uniform sampler2D uSampler;
+
+void main(void) {
+  gl_FragColor = vec4(0.,1.,1.,1.);
+}
+</script>
+
+<script id="term-vs" type="x-shader/vertex">
 uniform float uTime;
 uniform vec2 uScreenSize;
 uniform vec2 uGridSize;
@@ -95,10 +113,6 @@ void main() {
 </script>
 
 <script id="term-fs" type="x-shader/fragment">
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 uniform float uTime;
 uniform sampler2D uFont;
 varying vec2 vCharCoord;
@@ -286,6 +300,11 @@ var canvas,
   timeLocation,
   screenSizeLocation,
   gridSizeLocation,
+  compProgram,
+  compPositionBuffer, compPositionLocation,
+  compTexCoordBuffer, compTexCoordLocation,
+  compMVMatrix, compMVMatrixLocation,
+  compPMatrix, compPMatrixLocation,
   parameters = {
     start_time: Date.now(),
     time: 0,
@@ -303,6 +322,9 @@ image.onload = function() {
 };
 
 function init() {
+  glMatrix.setMatrixArrayType(Float32Array);
+
+  var vs, fs;
   canvas = document.querySelector('canvas');
 
   try {
@@ -312,17 +334,19 @@ function init() {
     throw "Cannot create WebGL context.";
   }
 
+  // Terminal gemoetry buffer
   geoBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
+  // Terminal character buffer
   charBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  // Font image
+  // Terminal font image
   fontTex = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, fontTex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -332,9 +356,9 @@ function init() {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
-  // Create Program
-  var vs = document.getElementById('term-vs').textContent;
-  var fs = document.getElementById('term-fs').textContent;
+  // Terminal shader
+  vs = document.getElementById('term-vs').textContent;
+  fs = document.getElementById('term-fs').textContent;
   termProgram = createProgram(vs, fs);
   timeLocation = gl.getUniformLocation(termProgram, 'uTime');
   screenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize');
@@ -355,12 +379,44 @@ function init() {
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+  // Composition geometry buffer
+  compPositionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, compPositionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     1.0,  1.0,  0.0,
+    -1.0,  1.0,  0.0,
+     1.0, -1.0,  0.0,
+    -1.0, -1.0,  0.0
+  ]), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Composition texture coordinate buffer
+  compTexCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, compTexCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     1.0,  1.0,
+    -1.0,  1.0,
+     1.0, -1.0,
+    -1.0, -1.0
+  ]), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Composition shader
+  vs = document.getElementById('comp-vs').textContent;
+  fs = document.getElementById('comp-fs').textContent;
+  compProgram = createProgram(vs, fs);
+  compMVMatrixLocation = gl.getUniformLocation(compProgram, 'uMVMatrix');
+  compPMatrixLocation = gl.getUniformLocation(compProgram, 'uPMatrix');
+  compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition');
+  compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
+
 }
 
 function createProgram(vertex, fragment) {
   var program = gl.createProgram();
-  var vs = createShader(vertex, gl.VERTEX_SHADER);
-  var fs = createShader(fragment, gl.FRAGMENT_SHADER);
+  var preamble = '#ifdef GL_ES\nprecision highp float;\n#endif\n\n';
+  var vs = createShader(preamble + vertex, gl.VERTEX_SHADER);
+  var fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER);
 
   if (vs == null || fs == null) return null;
   gl.attachShader(program, vs);
@@ -403,6 +459,12 @@ function resize() {
     canvas.height = parameters.screenHeight = h;
     gl.viewport(0, 0, w, h);
   }
+  compPMatrix = mat4.create();
+  mat4.perspective(compPMatrix, Math.PI/4, w/h, .1, 100);
+  compMVMatrix = mat4.create();
+  var q = quat.create();
+  quat.rotateY(q, q, Math.PI/4);
+  mat4.fromRotationTranslation(compMVMatrix, q, [0, 0, -7.0]);
 }
 
 function animate() {
@@ -414,11 +476,13 @@ function animate() {
 function render() {
   if (!termProgram) return;
 
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+  // Draw the terminal
+
   parameters.time = Date.now() - parameters.start_time;
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   gl.useProgram(termProgram);
   gl.uniform1f(timeLocation, parameters.time / 1000);
@@ -441,6 +505,25 @@ function render() {
 
   gl.disableVertexAttribArray(geoLocation);
   gl.disableVertexAttribArray(charLocation);
+
+  // Composite the terminal
+
+  gl.useProgram(compProgram);
+  gl.uniformMatrix4fv(compMVMatrixLocation, false, compMVMatrix);
+  gl.uniformMatrix4fv(compPMatrixLocation, false, compPMatrix);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, compPositionBuffer);
+  gl.vertexAttribPointer(compPositionLocation, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(compPositionLocation);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, compTexCoordBuffer);
+  gl.vertexAttribPointer(compTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(compTexCoordLocation);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  gl.disableVertexAttribArray(compPositionLocation);
+  gl.disableVertexAttribArray(compTexCoordLocation);
 
 }
 
