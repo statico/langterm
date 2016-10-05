@@ -38,6 +38,8 @@ varying highp vec2 vTexCoord;
 
 void main(void) {
   gl_FragColor = texture2D(uTermTex, vTexCoord);
+  if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99)
+    gl_FragColor += 0.2;
 }
 </script>
 
@@ -147,7 +149,7 @@ var Terminal = (function() {
 
   function Terminal() {
     this.width = 60;
-    this.height = 50;
+    this.height = 24;
     this.cursor = { x: 0, y: 0 };
     var a = this.width * this.height;
     this.buffer = new Array(a);
@@ -260,6 +262,7 @@ term.addString(
 "Welcome session b6623a0fcc38cf68              \n" +
 "Type 'help' to get started                    \n" +
 ">");
+//for (var i = 0; i < term.width * term.height - 2; i++) { term.addChar('#'); }
 
 (function() {
   window.addEventListener('keydown', function(e) {
@@ -464,9 +467,9 @@ function resize() {
   mat4.perspective(compPMatrix, Math.PI/4, w/h, .1, 100);
   compMVMatrix = mat4.create();
   var q = quat.create();
-  quat.rotateY(q, q, glMatrix.toRadian(10));
-  quat.rotateZ(q, q, glMatrix.toRadian(2));
-  mat4.fromRotationTranslation(compMVMatrix, q, [0, 0, -3.5]);
+  quat.rotateY(q, q, glMatrix.toRadian(6));
+  quat.rotateZ(q, q, glMatrix.toRadian(1));
+  mat4.fromRotationTranslationScale(compMVMatrix, q, [0.20, 0.05, -4.2], [1.45, 1.05, 1]);
 }
 
 function animate() {
