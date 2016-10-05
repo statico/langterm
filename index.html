@@ -19,6 +19,27 @@ canvas { width: 100%; height: 100%; }
 
 <script src="gl-matrix-min.js"><</script>
 
+<script id="post-vs" type="x-shader/vertex">
+attribute vec3 aPosition;
+attribute vec2 aTexCoord;
+varying vec2 vTexCoord;
+
+void main(void) {
+  gl_Position = vec4(aPosition, 1.0);
+  vTexCoord = aTexCoord;
+}
+</script>
+
+<script id="post-fs" type="x-shader/fragment">
+uniform sampler2D uTermTex;
+varying highp vec2 vTexCoord;
+
+void main(void) {
+  gl_FragColor = texture2D(uTermTex, vTexCoord);
+  gl_FragColor.b += 0.2; // XXX
+}
+</script>
+
 <script id="comp-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
@@ -33,11 +54,11 @@ void main(void) {
 </script>
 
 <script id="comp-fs" type="x-shader/fragment">
-uniform sampler2D uTermTex;
+uniform sampler2D uPostTex;
 varying highp vec2 vTexCoord;
 
 void main(void) {
-  gl_FragColor = texture2D(uTermTex, vTexCoord);
+  gl_FragColor = texture2D(uPostTex, vTexCoord);
   if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99)
     gl_FragColor += 0.2;
 }
@@ -304,11 +325,15 @@ var canvas,
   screenSizeLocation,
   gridSizeLocation,
   compProgram,
-  compTermTexLocation,
+  compPostTexLocation,
   compPositionBuffer, compPositionLocation,
   compTexCoordBuffer, compTexCoordLocation,
   compMVMatrix, compMVMatrixLocation,
   compPMatrix, compPMatrixLocation,
+  postProgram,
+  postFrameBuf, postTex, postTermTexLocation,
+  postPositionBuffer, postPositionLocation,
+  postTexCoordBuffer, postTexCoordLocation,
   parameters = {
     start_time: Date.now(),
     time: 0,
@@ -396,6 +421,38 @@ function init() {
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+  // Post-process framebuffer & texture
+  postFrameBuf = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, postFrameBuf);
+  postTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, postTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1024, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, postTex, 0);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  // Post-process geometry buffer
+  postPositionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, postPositionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAD_GEO, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Post-process texture coordinate buffer
+  postTexCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, postTexCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAT_COORDS, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Post-process shader
+  vs = document.getElementById('post-vs').textContent;
+  fs = document.getElementById('post-fs').textContent;
+  postProgram = createProgram(vs, fs);
+  postTermTexLocation = gl.getUniformLocation(postProgram, 'uTermTex');
+  postPositionLocation = gl.getAttribLocation(postProgram, 'aPosition');
+  postTexCoordLocation = gl.getAttribLocation(postProgram, 'aTexCoord');
+
   // Composition geometry buffer
   compPositionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, compPositionBuffer);
@@ -414,7 +471,7 @@ function init() {
   compProgram = createProgram(vs, fs);
   compMVMatrixLocation = gl.getUniformLocation(compProgram, 'uMVMatrix');
   compPMatrixLocation = gl.getUniformLocation(compProgram, 'uPMatrix');
-  compTermTexLocation = gl.getUniformLocation(compProgram, 'uTermTex');
+  compPostTexLocation = gl.getUniformLocation(compProgram, 'uPostTex');
   compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition');
   compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
 
@@ -518,6 +575,35 @@ function render() {
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
+  // Post-process the terminal
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, postFrameBuf);
+  gl.viewport(0, 0, 1024, 1024);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.useProgram(postProgram);
+
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, termTex);
+  gl.uniform1i(postTermTexLocation, 0);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, postPositionBuffer);
+  gl.vertexAttribPointer(postPositionLocation, 3, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(postPositionLocation);
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, postTexCoordBuffer);
+  gl.vertexAttribPointer(postTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(postTexCoordLocation);
+
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  gl.bindTexture(gl.TEXTURE_2D, postTex);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+  gl.disableVertexAttribArray(postPositionLocation);
+  gl.disableVertexAttribArray(postTexCoordLocation);
+
   // Composite the terminal
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -529,8 +615,8 @@ function render() {
   gl.uniformMatrix4fv(compPMatrixLocation, false, compPMatrix);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, termTex);
-  gl.uniform1i(compTermTexLocation, 0);
+  gl.bindTexture(gl.TEXTURE_2D, postTex);
+  gl.uniform1i(compPostTexLocation, 0);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, compPositionBuffer);
   gl.vertexAttribPointer(compPositionLocation, 3, gl.FLOAT, false, 0, 0);
