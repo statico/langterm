@@ -65,12 +65,12 @@ vec2 res = iResolution.xy / 6.0;
 // Hardness of scanline.
 //  -8.0 = soft
 // -16.0 = medium
-float hardScan = -8.0;
+float hardScan = -16.0;
 
 // Hardness of pixels in scanline.
 // -2.0 = soft
 // -4.0 = hard
-float hardPix = -3.0;
+float hardPix = -4.0;
 
 // Display warp.
 // 0.0 = none
@@ -78,8 +78,8 @@ float hardPix = -3.0;
 vec2 warp = vec2(1.0 / 32.0, 1.0 / 24.0);
 
 // Amount of shadow mask.
-float maskDark = 0.5;
-float maskLight = 1.5;
+float maskDark = 1.0;
+float maskLight = 1.0;
 
 // sRGB to Linear.
 // Assuing using sRGB typed textures this should not be needed.
@@ -199,24 +199,10 @@ float Bar(float pos, float bar) {
 
 // Entry.
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
-  // Unmodified.
-  if (fragCoord.x < iResolution.x * 0.333) {
-    fragColor.rgb =
-      Fetch(fragCoord.xy / iResolution.xy + vec2(0.333, 0.0),
-            vec2(0.0, 0.0));
-  } else {
-    vec2 pos = Warp(fragCoord.xy / iResolution.xy + vec2(-0.333, 0.0));
-    if (fragCoord.x < iResolution.x * 0.666) {
-      hardScan = -12.0;
-      maskDark = maskLight = 1.0;
-      pos = Warp(fragCoord.xy / iResolution.xy);
-    }
-    fragColor.rgb = Tri(pos) * Mask(fragCoord.xy);
-  }
+  vec2 pos = Warp(fragCoord.xy / iResolution.xy);
+  pos = Warp(fragCoord.xy / iResolution.xy);
+  fragColor.rgb = Tri(pos) * Mask(fragCoord.xy);
   fragColor.a = fragColor.r; //1.0;
-  fragColor.rgb *=
-    Bar(fragCoord.x, iResolution.x * 0.333) *
-    Bar(fragCoord.x, iResolution.x * 0.666);
   fragColor.rgb = ToSrgb(fragColor.rgb);
 }
 
