@@ -17,7 +17,7 @@ canvas { width: 100%; height: 100%; }
 
 <canvas></canvas>
 
-<script src="gl-matrix-min.js"><</script>
+<script src="gl-matrix-min.js"></script>
 
 <script id="post-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
@@ -235,7 +235,7 @@ varying highp vec2 vTexCoord;
 
 void main(void) {
   gl_FragColor = texture2D(uPostTex, vTexCoord);
-  //XXX if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
+  if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
 }
 </script>
 
