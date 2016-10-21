@@ -102,7 +102,7 @@ void main() {
   // Add a little noise.
   // https://github.com/mattdesl/gl-vignette-background
   vec3 noise = vec3(random(vTexCoord * 1.5), random(vTexCoord * 2.5), random(vTexCoord));
-  gl_FragColor.rgb = mix(gl_FragColor.rgb, blend(gl_FragColor.rgb, noise), 0.3);
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, blend(gl_FragColor.rgb, noise), 0.25);
 
   // Not the best vignette in the world, but good enough.
   float dist = length(vTexCoord - 0.5) * 0.8;
@@ -151,7 +151,8 @@ vec2 iResolution = vec2(2048.0, 2048.0); // Since this is ported from ShaderToy
 // Emulated input resolution.
 #if 1
   // Fix resolution to set amount.
-vec2 res = vec2(600.0 / 1.0, 240.0 / 1.0); // NOTE: Terminal size is 60x24
+  // NOTE: Terminal is 60x24 characters and font size is 8x8. This took some tweaking.
+vec2 res = vec2(480.0, 240.0);
 #else
   // Optimize for resize.
 vec2 res = iResolution.xy / 6.0;
@@ -160,7 +161,7 @@ vec2 res = iResolution.xy / 6.0;
 // Hardness of scanline.
 //  -8.0 = soft
 // -16.0 = medium
-float hardScan = -8.0;
+float hardScan = -10.0;
 
 // Hardness of pixels in scanline.
 // -2.0 = soft
@@ -359,8 +360,6 @@ const float ATTR_CURSOR = 1.0;
 const float ATTR_INVERSE = 2.0;
 const float ATTR_BLINK = 4.0;
 
-const float PADDING = 0.01;
-
 void main() {
   // Geometry looks like this:
   //
@@ -393,7 +392,6 @@ void main() {
   if (k == 1.0) pos.x += 1.3; // 1.0 works but these values result in
   if (k == 2.0) pos.y += 0.7; // some better line spacing.
   pos = (pos / uGridSize * 2.0) - 1.0;
-  pos *= (1.0 - PADDING * 2.0) + PADDING;
   pos.y *= -1.0;
   gl_Position = vec4(pos, 0, 1);
 
