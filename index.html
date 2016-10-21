@@ -31,9 +31,26 @@ void main() {
 uniform sampler2D uBGTex;
 uniform vec2 uScreenSize;
 uniform vec2 uBGSize;
+uniform float uTime;
 varying mediump vec2 vTexCoord;
 
+// https://github.com/Jam3/glsl-blend-overlay
+vec3 blend(vec3 base, vec3 value) {
+  return mix(1.0 - 2.0 * (1.0 - base) * (1.0 - value), 2.0 * base * value, step(base, vec3(0.5)));
+}
+
+// https://github.com/mattdesl/glsl-random
+float random(vec2 co) {
+  highp float a = 12.9898;
+  highp float b = 78.233 - uTime;
+  highp float c = 43758.5453 + uTime;
+  highp float dt= dot(co.xy ,vec2(a,b));
+  highp float sn= mod(dt,3.14);
+  return fract(sin(sn) * c);
+}
+
 void main() {
+
   // An implementation of CSS background-size: cover
   // via http://stackoverflow.com/a/6565988 + my own crappy math
   vec2 s = uScreenSize; // Screen
@@ -44,6 +61,16 @@ void main() {
   vec2 offset = (rs < ri ? vec2((new.x - s.x) / 2.0, 0.0) : vec2(0.0, (new.y - s.y) / 2.0)) / new;
   vec2 uv = vTexCoord * s / new + offset;
   gl_FragColor = texture2D(uBGTex, uv);
+
+  // Add a little vignette and noise.
+  // https://github.com/mattdesl/gl-vignette-background
+  vec3 noise = vec3(random(vTexCoord * 1.5), random(vTexCoord * 2.5), random(vTexCoord));
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, blend(gl_FragColor.rgb, noise), 0.3);
+
+  float dist = length(vTexCoord - 0.5) * 0.8;
+  float vignette = mix(1.0, -0.4, dist) * 2.8;
+  gl_FragColor.rgb -= clamp(1.0 - vignette, 0.0, 1.0);
+  //gl_FragColor.rgb = vec3(vignette); // XXXXXXXX
 }
 </script>
 
@@ -527,6 +554,7 @@ var canvas,
   termProgram,
   geoLocation,
   timeLocation,
+  time2Location,
   screenSizeLocation,
   screenSize2Location,
   bgSizeLocation,
@@ -728,6 +756,7 @@ function init() {
   bgProgram = createProgram(vs, fs);
   bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGTex');
   screenSize2Location = gl.getUniformLocation(bgProgram, 'uScreenSize');
+  time2Location = gl.getUniformLocation(bgProgram, 'uTime');
   bgSizeLocation = gl.getUniformLocation(bgProgram, 'uBGSize');
   bgPositionLocation = gl.getAttribLocation(bgProgram, 'aPosition');
   bgTexCoordLocation = gl.getAttribLocation(bgProgram, 'aTexCoord');
@@ -867,6 +896,7 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(bgProgram);
+  gl.uniform1f(time2Location, parameters.time / 1000);
   gl.uniform2f(screenSize2Location, parameters.screenWidth, parameters.screenHeight);
   gl.uniform2f(bgSizeLocation, bgImage.width, bgImage.height);
 
