@@ -79,7 +79,7 @@ varying mediump vec2 vTexCoord;
 // Please take and use, change, or whatever.
 //
 
-vec2 iResolution = vec2(1024.0, 1024.0); // XXX
+vec2 iResolution = vec2(2048.0, 2048.0); // XXX
 
 // Emulated input resolution.
 #if 1
@@ -640,7 +640,7 @@ function init() {
   gl.bindTexture(gl.TEXTURE_2D, termTex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1024, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2048, 2048, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, termTex, 0);
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -652,7 +652,7 @@ function init() {
   gl.bindTexture(gl.TEXTURE_2D, postTex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1024, 1024, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2048, 2048, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, postTex, 0);
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -802,7 +802,7 @@ function render() {
   parameters.time = Date.now() - parameters.start_time;
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, termFrameBuf);
-  gl.viewport(0, 0, 1024, 1024);
+  gl.viewport(0, 0, 2048, 2048);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(termProgram);
@@ -834,7 +834,7 @@ function render() {
   // Post-process the terminal
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, postFrameBuf);
-  gl.viewport(0, 0, 1024, 1024);
+  gl.viewport(0, 0, 2048, 2048);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(postProgram);
