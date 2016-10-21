@@ -29,10 +29,21 @@ void main() {
 
 <script id="bg-fs" type="x-shader/fragment">
 uniform sampler2D uBGTex;
-varying highp vec2 vTexCoord;
+uniform vec2 uScreenSize;
+uniform vec2 uBGSize;
+varying mediump vec2 vTexCoord;
 
-void main(void) {
-  gl_FragColor = texture2D(uBGTex, vTexCoord);
+void main() {
+  // An implementation of CSS background-size: cover
+  // via http://stackoverflow.com/a/6565988 + my own crappy math
+  vec2 s = uScreenSize; // Screen
+  vec2 i = uBGSize; // Image
+  float rs = s.x / s.y;
+  float ri = i.x / i.y;
+  vec2 new = rs < ri ? vec2(i.x * s.y / i.y, s.y) : vec2(s.x, i.y * s.x / i.x);
+  vec2 offset = (rs < ri ? vec2((new.x - s.x) / 2.0, 0.0) : vec2(0.0, (new.y - s.y) / 2.0)) / new;
+  vec2 uv = vTexCoord * s / new + offset;
+  gl_FragColor = texture2D(uBGTex, uv);
 }
 </script>
 
@@ -516,6 +527,8 @@ var canvas,
   geoLocation,
   timeLocation,
   screenSizeLocation,
+  screenSize2Location,
+  bgSizeLocation,
   gridSizeLocation,
   compProgram,
   compPostTexLocation,
@@ -706,6 +719,8 @@ function init() {
   fs = document.getElementById('bg-fs').textContent;
   bgProgram = createProgram(vs, fs);
   bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGTex');
+  screenSize2Location = gl.getUniformLocation(bgProgram, 'uScreenSize');
+  bgSizeLocation = gl.getUniformLocation(bgProgram, 'uBGSize');
   bgPositionLocation = gl.getAttribLocation(bgProgram, 'aPosition');
   bgTexCoordLocation = gl.getAttribLocation(bgProgram, 'aTexCoord');
 
@@ -845,6 +860,8 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(bgProgram);
+  gl.uniform2f(screenSize2Location, parameters.screenWidth, parameters.screenHeight);
+  gl.uniform2f(bgSizeLocation, bgImage.width, bgImage.height);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, bgTex);
