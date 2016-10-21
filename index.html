@@ -769,7 +769,7 @@ function createProgram(vertex, fragment) {
   var vs = createShader(preamble + vertex, gl.VERTEX_SHADER);
   var fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER);
 
-  if (vs == null || fs == null) return null;
+  if (vs == null || fs == null) throw new Error('Either vertex or fragment shader is null');
   gl.attachShader(program, vs);
   gl.attachShader(program, fs);
   gl.deleteShader(vs);
