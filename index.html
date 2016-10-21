@@ -21,7 +21,7 @@ attribute vec3 aPosition;
 attribute vec2 aTexCoord;
 varying vec2 vTexCoord;
 
-void main(void) {
+void main() {
   gl_Position = vec4(aPosition, 1.0);
   vTexCoord = aTexCoord;
 }
@@ -41,7 +41,7 @@ attribute vec3 aPosition;
 attribute vec2 aTexCoord;
 varying vec2 vTexCoord;
 
-void main(void) {
+void main() {
   gl_Position = vec4(aPosition, 1.0);
   vTexCoord = aTexCoord;
 }
@@ -49,7 +49,7 @@ void main(void) {
 
 <script id="post-fs" type="x-shader/fragment">
 uniform sampler2D uTermTex;
-varying highp vec2 vTexCoord;
+varying mediump vec2 vTexCoord;
 
 // BEGIN -----------------------------------------------------------------------------
 
@@ -225,7 +225,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
 // END -------------------------------------------------------------------------------
 
-void main(void) {
+void main() {
   gl_FragColor = texture2D(uTermTex, vTexCoord);
   //gl_FragColor.b += 0.2; // XXX
   mainImage(gl_FragColor, vTexCoord*iResolution);
@@ -240,7 +240,7 @@ uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;
 varying vec2 vTexCoord;
 
-void main(void) {
+void main() {
   gl_Position = uPMatrix * uMVMatrix * vec4(aPosition, 1.0);
   vTexCoord = aTexCoord;
 }
@@ -248,9 +248,9 @@ void main(void) {
 
 <script id="comp-fs" type="x-shader/fragment">
 uniform sampler2D uPostTex;
-varying highp vec2 vTexCoord;
+varying mediump vec2 vTexCoord;
 
-void main(void) {
+void main() {
   gl_FragColor = texture2D(uPostTex, vTexCoord);
   if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
 }
@@ -713,7 +713,7 @@ function init() {
 
 function createProgram(vertex, fragment) {
   var program = gl.createProgram();
-  var preamble = '#ifdef GL_ES\nprecision highp float;\n#endif\n\n';
+  var preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n';
   var vs = createShader(preamble + vertex, gl.VERTEX_SHADER);
   var fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER);
 
