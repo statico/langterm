@@ -263,7 +263,8 @@ varying mediump vec2 vTexCoord;
 
 void main() {
   gl_FragColor = texture2D(uPostTex, vTexCoord);
-  if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
+  gl_FragColor.a = gl_FragColor.r;
+  //if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
 }
 </script>
 
@@ -589,11 +590,15 @@ function init() {
   canvas = document.querySelector('canvas');
 
   try {
-    gl = canvas.getContext('experimental-webgl');
+    gl = canvas.getContext('experimental-webgl', {alpha: false});
   } catch (error) {}
   if (!gl) {
     throw "Cannot create WebGL context.";
   }
+
+  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   // Terminal gemoetry buffer
   geoBuffer = gl.createBuffer();
@@ -781,7 +786,7 @@ function resize() {
   var q = quat.create();
   quat.rotateY(q, q, glMatrix.toRadian(6));
   quat.rotateZ(q, q, glMatrix.toRadian(1));
-  mat4.fromRotationTranslationScale(compMVMatrix, q, [0.20, 0.05, -4.2], [1.45, 1.05, 1]);
+  mat4.fromRotationTranslationScale(compMVMatrix, q, [0.23, 0.05, -4.2], [1.49, 1.15, 1]);
 }
 
 function animate() {
