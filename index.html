@@ -1,21 +1,57 @@
 <!doctype html>
+<!--
+
+  WebGL-based VT220 emulator. Made as a learning example and frontend for a cute text adventure
+  game. Public domain, use as you wish.
+
+  Basic outline:
+
+    1) A data structure, Terminal, keeps track of the logical appearance of the terminal.
+
+    2) The terminal is rendered to a 2048x2048 texture by drawing triangles filled up with bitmap
+       font data found in apple2font.png. That font came from
+       http://www.kreativekorp.com/software/fonts/apple2.shtml and was turned into a sprite sheet
+       with http://www.codehead.co.uk/cbfg/.
+
+    3) That texture is rendered to another texture as a full-screen quad (two triangles) and
+       post-processed to add CRT-like scanline and warping effects. I got the CRT shader from here:
+       https://www.shadertoy.com/view/XsjSzR
+
+    4) The background image (source: https://goo.gl/oHFnpX) had its text photoshopped out and noise
+       added to look blank. It is rendered to a full-screen quad, and some vignetting and noise is
+       added for effect. I could have used `background-size: cover` in CSS and composited the
+       vignette and noise over the web page, but I wanted to do it all in GLSL as a learning
+       example.
+
+    5) The terminal texture is rendered to a quad in 3D space with perspective. I could have just
+       rendered a polygon in 2D, but using a perspective matrix makes handling viewport resizing
+       a lot easier. I also had to enable GL blending to properly composite this texture over the
+       background image.
+
+  I started with WebGL Boilerplate (github.com/paulirish/webgl-boilerplate). For more involved
+  projects and to reduce repetition, consider using ThreeJS.
+
+-->
 <html dir="ltr" lang="en-US">
 <head>
+
 <title>langterm</title>
 <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+
 <style type="text/css">
-html, body {
-  background: #222; color: #eee; margin: 0; overflow: hidden; width: 100%; height: 100%;
-}
+html, body { background: #222; color: #eee; margin: 0; overflow: hidden; width: 100%; height: 100%; }
 canvas { width: 100%; height: 100%; }
 </style>
+
 </head>
 <body>
 
 <canvas></canvas>
 
+<!-- Needed for easy JavaScript matrix/vector operations -->
 <script src="gl-matrix-min.js"></script>
 
+<!-- Background vertex shader. Nothing special. -->
 <script id="bg-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
@@ -27,7 +63,9 @@ void main() {
 }
 </script>
 
+<!-- Background fragment shader. Centers the background image in a quad and adds effects. -->
 <script id="bg-fs" type="x-shader/fragment">
+
 uniform sampler2D uBGTex;
 uniform vec2 uScreenSize;
 uniform vec2 uBGSize;
@@ -50,9 +88,8 @@ float random(vec2 co) {
 }
 
 void main() {
-
-  // An implementation of CSS background-size: cover
-  // via http://stackoverflow.com/a/6565988 + my own crappy math
+  // An implementation of CSS `background-size: cover`
+  // using http://stackoverflow.com/a/6565988 and my own crappy math
   vec2 s = uScreenSize; // Screen
   vec2 i = uBGSize; // Image
   float rs = s.x / s.y;
@@ -62,18 +99,20 @@ void main() {
   vec2 uv = vTexCoord * s / new + offset;
   gl_FragColor = texture2D(uBGTex, uv);
 
-  // Add a little vignette and noise.
+  // Add a little noise.
   // https://github.com/mattdesl/gl-vignette-background
   vec3 noise = vec3(random(vTexCoord * 1.5), random(vTexCoord * 2.5), random(vTexCoord));
   gl_FragColor.rgb = mix(gl_FragColor.rgb, blend(gl_FragColor.rgb, noise), 0.3);
 
+  // Not the best vignette in the world, but good enough.
   float dist = length(vTexCoord - 0.5) * 0.8;
   float vignette = mix(1.0, -0.4, dist) * 2.8;
   gl_FragColor.rgb -= clamp(1.0 - vignette, 0.0, 1.0);
-  //gl_FragColor.rgb = vec3(vignette); // XXXXXXXX
+  //gl_FragColor.rgb = vec3(vignette); // Uncomment to see only vignette/noise.
 }
 </script>
 
+<!-- Post-process vertex shader. Nothing special. -->
 <script id="post-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
@@ -85,11 +124,12 @@ void main() {
 }
 </script>
 
+<!-- Post-process fragment shader. Does sweet CRT effects. -->
 <script id="post-fs" type="x-shader/fragment">
 uniform sampler2D uTermTex;
 varying mediump vec2 vTexCoord;
 
-// BEGIN -----------------------------------------------------------------------------
+// BEGIN SHADERTOY CODE -----------------------------------------------------------------
 
 //
 // PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER
@@ -106,12 +146,12 @@ varying mediump vec2 vTexCoord;
 // Please take and use, change, or whatever.
 //
 
-vec2 iResolution = vec2(2048.0, 2048.0); // XXX
+vec2 iResolution = vec2(2048.0, 2048.0); // Since this is ported from ShaderToy
 
 // Emulated input resolution.
 #if 1
   // Fix resolution to set amount.
-vec2 res = vec2(600.0 / 1.0, 240.0 / 1.0);
+vec2 res = vec2(600.0 / 1.0, 240.0 / 1.0); // NOTE: Terminal size is 60x24
 #else
   // Optimize for resize.
 vec2 res = iResolution.xy / 6.0;
@@ -261,16 +301,16 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   fragColor.rgb = ToSrgb(fragColor.rgb);
 }
 
-// END -------------------------------------------------------------------------------
+// END SHADERTOY CODE -------------------------------------------------------------------
 
+// The real main() since this is ported from ShaderToy.
 void main() {
   gl_FragColor = texture2D(uTermTex, vTexCoord);
-  //gl_FragColor.b += 0.2; // XXX
   mainImage(gl_FragColor, vTexCoord*iResolution);
 }
-
 </script>
 
+<!-- Compositing vertex shader. Nothing special other than that we're now doing 3D. -->
 <script id="comp-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
@@ -284,17 +324,27 @@ void main() {
 }
 </script>
 
+<!-- Compositing vertex shader. Nothing special. -->
 <script id="comp-fs" type="x-shader/fragment">
 uniform sampler2D uPostTex;
 varying mediump vec2 vTexCoord;
 
 void main() {
   gl_FragColor = texture2D(uPostTex, vTexCoord);
+
+  // The fancy CRT shader works against a black background and the alpha channel is lost. Using the
+  // red value as alpha looks good enough.
   gl_FragColor.a = gl_FragColor.r;
+
+  // Uncomment to show a white border, which helps with positioning:
   //if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
 }
 </script>
 
+<!--
+  Terminal vertex shader. Turns a buffer of "terminal space" coordinates into clip space.
+  Calculates the UVs needed to look up font bitmap data.
+-->
 <script id="term-vs" type="x-shader/vertex">
 uniform float uTime;
 uniform vec2 uScreenSize;
@@ -366,6 +416,7 @@ void main() {
 }
 </script>
 
+<!-- Terminal fragment shader. The vertex shader did the hard work, so this just draws the character. -->
 <script id="term-fs" type="x-shader/fragment">
 uniform float uTime;
 uniform sampler2D uFont;
@@ -377,25 +428,25 @@ const float ATTR_CURSOR = 1.0;
 const float ATTR_INVERSE = 2.0;
 const float ATTR_BLINK = 4.0;
 
-const vec4 FG = vec4(.95, .45, .02, 1.0);
+const vec4 COLOR = vec4(.95, .45, .02, 1.0); // Amber text color
 
 const float EPSILON = 0.000;
 
 void main() {
-  // Trim the triangle so we only draw the rectangle.
+  // Trim the points of the triangle so we only draw the rectangle.
   // Without EPSILON we get a few gaps in inversed lines.
   if (vArea.x > 1.0 + EPSILON || vArea.y > 1.0 + EPSILON) discard;
 
   bool value = texture2D(uFont, vCharCoord).r >= 1.0;
-  bool inverse = mod(vAttr / ATTR_INVERSE, 2.0) >= 1.0;
+  bool inverse = mod(vAttr / ATTR_INVERSE, 2.0) >= 1.0; // No bit shifting in GLSL. Maybe I'm wrong.
   if (value && inverse) discard;
   if (!value && !inverse) discard;
 
-  gl_FragColor = FG;
+  gl_FragColor = COLOR;
 }
 </script>
 
-<script>
+<script type="text/javascript">
 
 var Terminal = (function() {
 
