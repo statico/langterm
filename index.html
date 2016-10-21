@@ -73,7 +73,7 @@ vec2 iResolution = vec2(1024.0, 1024.0); // XXX
 // Emulated input resolution.
 #if 1
   // Fix resolution to set amount.
-vec2 res = vec2(800.0 / 1.0, 480.0 / 1.0);
+vec2 res = vec2(600.0 / 1.0, 240.0 / 1.0);
 #else
   // Optimize for resize.
 vec2 res = iResolution.xy / 6.0;
@@ -82,7 +82,7 @@ vec2 res = iResolution.xy / 6.0;
 // Hardness of scanline.
 //  -8.0 = soft
 // -16.0 = medium
-float hardScan = -16.0;
+float hardScan = -8.0;
 
 // Hardness of pixels in scanline.
 // -2.0 = soft
@@ -92,7 +92,7 @@ float hardPix = -4.0;
 // Display warp.
 // 0.0 = none
 // 1.0/8.0 = extreme
-vec2 warp = vec2(1.0 / 32.0, 1.0 / 24.0);
+vec2 warp = vec2(1.0 / 60.0, 1.0 / 24.0);
 
 // Amount of shadow mask.
 float maskDark = 1.0;
