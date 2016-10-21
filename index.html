@@ -562,11 +562,14 @@ bgImage.onload = fontImage.onload = function() {
   barrier++;
   if (barrier === 2) {
     init();
+    resize();
     animate();
   }
 };
 
 function init() {
+  window.onresize = resize;
+
   glMatrix.setMatrixArrayType(Float32Array);
 
   var UNIT_QUAD_GEO = new Float32Array([
@@ -782,7 +785,6 @@ function resize() {
 }
 
 function animate() {
-  resize();
   render();
   requestAnimationFrame(animate);
 }
