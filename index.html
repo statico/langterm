@@ -592,6 +592,7 @@ window.requestAnimationFrame = window.requestAnimationFrame || (function() {
     };
 })();
 
+// A giant pile of global variables that I'm too lazy to refactor. Sorry.
 var canvas,
   gl,
   geoBuffer,
@@ -631,6 +632,7 @@ var canvas,
     gridHeight: term.height
   };
 
+// We only have a few things to load, so start everything up after they're done loading.
 var fontImage = new Image();
 fontImage.src = 'apple2font.png';
 var bgImage = new Image();
