@@ -51,6 +51,9 @@ canvas { width: 100%; height: 100%; }
 <!-- Needed for easy JavaScript matrix/vector operations -->
 <script src="gl-matrix-min.js"></script>
 
+<!-- Because it makes XHR easy. -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
 <!-- Background vertex shader. Nothing special. -->
 <script id="bg-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
@@ -102,7 +105,7 @@ void main() {
   // Add a little noise.
   // https://github.com/mattdesl/gl-vignette-background
   vec3 noise = vec3(random(vTexCoord * 1.5), random(vTexCoord * 2.5), random(vTexCoord));
-  gl_FragColor.rgb = mix(gl_FragColor.rgb, blend(gl_FragColor.rgb, noise), 0.25);
+  gl_FragColor.rgb = mix(gl_FragColor.rgb, blend(gl_FragColor.rgb, noise), 0.15);
 
   // Not the best vignette in the world, but good enough.
   float dist = length(vTexCoord - 0.5) * 0.8;
@@ -559,23 +562,62 @@ term.addString(
 "                                              \n" +
 "Username: ian                                 \n" +
 "Password: **********                          \n" +
-"logging in....................                \n" +
-"Welcome session b6623a0fcc38cf68              \n" +
-"Type 'help' to get started                    \n" +
-">");
-//for (var i = 0; i < term.width * term.height - 2; i++) { term.addChar('#'); }
+"logging in.....");
 
 (function() {
-  window.addEventListener('keydown', function(e) {
-    if (e.key.length === 1) term.addChar(e.key);
-    else if (e.keyCode === 13) term.addChar('\n');
-    else return;
+
+  var ENDPOINT = 'https://game.langworth.com';
+
+  function update() {
     gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
+  }
+
+  var sessionID, inputBuffer = '';
+
+  var timer = setInterval(function() {
+    term.addChar('.');
+    update();
+  }, 250);
+
+  $.ajax({
+    url: ENDPOINT + '/new',
+    method: 'get',
+    dataType: 'json'
+  }).done(function(data) {
+    clearTimeout(timer);
+    sessionID = data.session;
+    term.addString('\n\n' + data.output);
+    update();
+  });
+
+  window.addEventListener('keydown', function(e) {
+    if (e.keyCode === 13) {
+      term.addChar('\n');
+      var message = inputBuffer;
+      inputBuffer = '';
+      $.ajax({
+        url: ENDPOINT + '/send',
+        method: 'post',
+        data: JSON.stringify({ session: sessionID, message: message }),
+        contentType: 'application/json'
+      }).done(function(data) {
+        term.addString(data.output);
+        update();
+      });
+    } else if (e.keyCode === 8) {
+      // TODO: Delete
+    } else if (e.key.length === 1) {
+      term.addChar(e.key);
+      inputBuffer += e.key;
+    }
+    else return;
+    update();
   });
   window.focus();
+
 })();
 
 /**
