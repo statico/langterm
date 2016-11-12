@@ -477,7 +477,12 @@ var Terminal = (function() {
     this._dirty = true;
   };
 
-  Terminal.prototype.addString = function(s, attrs) {
+  Terminal.prototype.addString = function(s, attrs, wrap) {
+    if (!s.length) return;
+    if (wrap) {
+      // https://www.rosettacode.org/wiki/Word_wrap#JavaScript
+      s = s.match(RegExp('.{1,' + this.width + '}(\\s|$)', 'g')).join('\n');
+    }
     var _this = this;
     s.split('').forEach(function(c) { _this.addChar(c, attrs); });
   };
@@ -589,7 +594,8 @@ term.addString(
   }).done(function(data) {
     clearTimeout(timer);
     sessionID = data.session;
-    term.addString('\n\n' + data.output);
+    term.addString('\n\n');
+    term.addString(data.output, null, true);
     update();
   });
 
@@ -604,7 +610,7 @@ term.addString(
         data: JSON.stringify({ session: sessionID, message: message }),
         contentType: 'application/json'
       }).done(function(data) {
-        term.addString(data.output);
+        term.addString(data.output, null, true);
         update();
       });
     } else if (e.keyCode === 8) {
