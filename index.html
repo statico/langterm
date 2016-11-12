@@ -515,6 +515,18 @@ var Terminal = (function() {
     this._dirty = true;
   };
 
+  Terminal.prototype.backspace = function() {
+    if (this.cursor.x > 0) {
+      var i = this.cursor.y * this.width + this.cursor.x - 1;
+      // Hack which assumes a '>' in the first column is a prompt.
+      if (!(this.cursor.x === 1 && this.buffer[i] === '>')) {
+        this.buffer[i] = ' ';
+        this.attrs[i] = 0;
+        this.cursor.x--;
+      }
+    }
+  };
+
   Terminal.prototype._update = function() {
     if (!this._dirty) return;
     for (var i = 0, len = this.buffer.length; i < len; i++) {
@@ -614,7 +626,8 @@ term.addString(
         update();
       });
     } else if (e.keyCode === 8) {
-      // TODO: Delete
+      term.backspace();
+      inputBuffer = inputBuffer.slice(0, -1);
     } else if (e.key.length === 1) {
       term.addChar(e.key);
       inputBuffer += e.key;
