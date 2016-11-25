@@ -484,7 +484,7 @@ var Terminal = (function() {
     if (!s.length) return;
     if (wrap) {
       // https://www.rosettacode.org/wiki/Word_wrap#JavaScript
-      s = s.match(RegExp('.{1,' + (this.width-1) + '}(\\s|$)', 'g')).join('\n');
+      s = s.match(RegExp('.{1,' + (this.width-2) + '}(\\s|$)', 'g')).join('\n');
     }
     var _this = this;
     s.split('').forEach(function(c) { _this.addChar(c, attrs); });
