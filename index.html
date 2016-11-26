@@ -944,8 +944,14 @@ function resize() {
   mat4.fromRotationTranslationScale(compMVMatrix, q, [0.23, 0.05, -4.2], [1.49, 1.15, 1]);
 }
 
+// Limit FPS to 15 to avoid melting GPUs.
+var lastFrame = 0;
 function animate() {
-  render();
+  var now = Date.now();
+  if (now - 1000/15 > lastFrame) {
+    lastFrame = now;
+    render();
+  }
   requestAnimationFrame(animate);
 }
 
