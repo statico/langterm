@@ -625,11 +625,17 @@ term.addString(
         data: JSON.stringify({ session: sessionID, message: message }),
         contentType: 'application/json'
       }).done(function(data) {
-        var match = String(data.output).match(/OPENURL:(\S+)/);
-        if (match) {
-          document.location.href = match[1];
+        if (data.output) {
+          var match = String(data.output).match(/OPENURL:(\S+)/);
+          if (match) {
+            document.location.href = match[1];
+          } else {
+            term.addString(data.output, null, true);
+            update();
+          }
         } else {
-          term.addString(data.output, null, true);
+          var error = output.error || String(output);
+          term.addString('?ERROR? ' + error, null, true);
           update();
         }
       });
