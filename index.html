@@ -611,54 +611,75 @@ term.addString(
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
   }
 
-  var sessionID, inputBuffer = '';
+  var sessionID = document.location.hash.substr(1),
+      inputBuffer = '';
 
-  var timer = setInterval(function() {
-    term.addChar('.');
-    update();
-  }, 250);
-
-  $.ajax({
-    url: ENDPOINT + '/new',
-    method: 'get',
-    dataType: 'json'
-  }).done(function(data) {
-    clearTimeout(timer);
-    sessionID = data.session;
+  if (sessionID === '') {
+    createSession();
+  } else {
     term.addString('\n\n');
-    term.addString(data.output, null, true);
-    update();
-  });
+    sendCommand('look');
+  }
+
+  function createSession() {
+    var timer = setInterval(function() {
+      term.addChar('.');
+      update();
+    }, 250);
+
+    $.ajax({
+      url: ENDPOINT + '/new',
+      method: 'get',
+      dataType: 'json'
+    }).done(function(data) {
+      clearTimeout(timer);
+      document.location.hash = sessionID = data.session;
+      term.addString('\n\n');
+      term.addString(data.output, null, true);
+      update();
+    });
+  }
+
+  function sendCommand(message) {
+    $.ajax({
+      url: ENDPOINT + '/send',
+      method: 'post',
+      data: JSON.stringify({ session: sessionID, message: message }),
+      contentType: 'application/json'
+    }).done(function(data) {
+      var match = String(data.output).match(/OPENURL:(\S+)/);
+      if (match) {
+        document.location.href = match[1];
+      } else {
+        term.addString(data.output, null, true);
+        update();
+      }
+    }).fail(function(xhr) {
+      var error;
+      try {
+        error = JSON.parse(xhr.responseText).error;
+      } catch (e) {
+        error = xhr.statusText;
+      }
+      term.addString('?ERROR? ' + error + '\n', null, true);
+      if (/No such session/.test(error)) {
+        term.addString("reconnecting...");
+        createSession();
+      }
+      update();
+    });
+  }
 
   window.addEventListener('keydown', function(e) {
-    if (e.keyCode === 13) {
+    if (e.keyCode === 13) { // Enter key
       term.addChar('\n');
       var message = inputBuffer;
       inputBuffer = '';
-      $.ajax({
-        url: ENDPOINT + '/send',
-        method: 'post',
-        data: JSON.stringify({ session: sessionID, message: message }),
-        contentType: 'application/json'
-      }).done(function(data) {
-        if (data.output) {
-          var match = String(data.output).match(/OPENURL:(\S+)/);
-          if (match) {
-            document.location.href = match[1];
-          } else {
-            term.addString(data.output, null, true);
-            update();
-          }
-        } else {
-          var error = output.error || String(output);
-          term.addString('?ERROR? ' + error, null, true);
-          update();
-        }
-      });
-    } else if (e.keyCode === 8) {
+      sendCommand(message);
+    } else if (e.keyCode === 8) { // Backspace
       term.backspace();
       inputBuffer = inputBuffer.slice(0, -1);
-    } else if (e.key.length === 1) {
+    } else if (e.key.length === 1) { // Modifier keys have long names.
       term.addChar(e.key);
       inputBuffer += e.key;
     }
