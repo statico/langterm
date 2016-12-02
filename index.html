@@ -707,7 +707,7 @@ var canvas,
   termTimeLocation,
 
   parameters = {
-    start_time: Date.now(),
+    startTime: Date.now(),
     time: 0,
     screenWidth: 0,
     screenHeight: 0,
@@ -963,7 +963,7 @@ function render() {
 
   // Draw the terminal
 
-  parameters.time = Date.now() - parameters.start_time;
+  parameters.time = Date.now() - parameters.startTime;
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, termFrameBuf);
   gl.viewport(0, 0, 2048, 2048);
