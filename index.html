@@ -72,7 +72,7 @@ void main() {
 <!-- Background fragment shader. Centers the background image in a quad and adds effects. -->
 <script id="bg-fs" type="x-shader/fragment">
 
-uniform sampler2D uBGTex;
+uniform sampler2D uBGImageTex;
 uniform vec2 uScreenSize;
 uniform vec2 uBGSize;
 uniform float uTime;
@@ -103,7 +103,7 @@ void main() {
   vec2 new = rs < ri ? vec2(i.x * s.y / i.y, s.y) : vec2(s.x, i.y * s.x / i.x);
   vec2 offset = (rs < ri ? vec2((new.x - s.x) / 2.0, 0.0) : vec2(0.0, (new.y - s.y) / 2.0)) / new;
   vec2 uv = vTexCoord * s / new + offset;
-  gl_FragColor = texture2D(uBGTex, uv);
+  gl_FragColor = texture2D(uBGImageTex, uv);
 
   // Add a little noise.
   // https://github.com/mattdesl/gl-vignette-background
@@ -589,9 +589,9 @@ term.addString(
   var ENDPOINT = 'https://game.langworth.com';
 
   function update() {
-    gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
   }
 
@@ -670,34 +670,51 @@ window.requestAnimationFrame = window.requestAnimationFrame || (function() {
 // A giant pile of global variables that I'm too lazy to refactor. Sorry.
 var canvas,
   gl,
-  geoBuffer,
-  charBuffer,
-  charLocation,
-  fontTex, fontTexLocation,
-  bgTex, bgTexLocation,
-  termTex, termFrameBuf,
-  termProgram,
-  geoLocation,
-  timeLocation,
-  time2Location,
-  screenSizeLocation,
-  screenSize2Location,
-  bgSizeLocation,
-  gridSizeLocation,
-  compProgram,
-  compPostTexLocation,
-  compPositionBuffer, compPositionLocation,
-  compTexCoordBuffer, compTexCoordLocation,
-  compMVMatrix, compMVMatrixLocation,
-  compPMatrix, compPMatrixLocation,
-  postProgram,
-  postFrameBuf, postTex, postTermTexLocation,
-  postPositionBuffer, postPositionLocation,
-  postTexCoordBuffer, postTexCoordLocation,
-  bgProgram,
+
+  bgImageTex,
   bgImageTexLocation,
-  bgPositionBuffer, bgPositionLocation,
-  bgTexCoordBuffer, bgTexCoordLocation,
+  bgPositionBuffer,
+  bgPositionLocation,
+  bgProgram,
+  bgScreenSizeLocation,
+  bgSizeLocation,
+  bgTexCoordBuffer,
+  bgTexCoordLocation,
+  bgTimeLocation,
+
+  compMVMatrix,
+  compMVMatrixLocation,
+  compPMatrix,
+  compPMatrixLocation,
+  compPositionBuffer,
+  compPositionLocation,
+  compPostTexLocation,
+  compProgram,
+  compTexCoordBuffer,
+  compTexCoordLocation,
+
+  postFrameBuf,
+  postPositionBuffer,
+  postPositionLocation,
+  postProgram,
+  postTermTexLocation,
+  postTex,
+  postTexCoordBuffer,
+  postTexCoordLocation,
+
+  termCharBuffer,
+  termCharLocation,
+  termFontTex,
+  termFontTexLocation,
+  termFrameBuf,
+  termGeoBuffer,
+  termGeoLocation,
+  termGridSizeLocation,
+  termProgram,
+  termScreenSizeLocation,
+  termTex,
+  termTimeLocation,
+
   parameters = {
     start_time: Date.now(),
     time: 0,
@@ -755,20 +772,20 @@ function init() {
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   // Terminal gemoetry buffer
-  geoBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
+  termGeoBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   // Terminal character buffer
-  charBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
+  termCharBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer);
   gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
   // Terminal font image
-  fontTex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, fontTex);
+  termFontTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, termFontTex);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -780,12 +797,12 @@ function init() {
   vs = document.getElementById('term-vs').textContent;
   fs = document.getElementById('term-fs').textContent;
   termProgram = createProgram(vs, fs);
-  timeLocation = gl.getUniformLocation(termProgram, 'uTime');
-  screenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize');
-  gridSizeLocation = gl.getUniformLocation(termProgram, 'uGridSize');
-  fontTexLocation = gl.getUniformLocation(termProgram, 'uFont');
-  geoLocation = gl.getAttribLocation(termProgram, 'aGeo');
-  charLocation = gl.getAttribLocation(termProgram, 'aChar');
+  termTimeLocation = gl.getUniformLocation(termProgram, 'uTime');
+  termScreenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize');
+  termGridSizeLocation = gl.getUniformLocation(termProgram, 'uGridSize');
+  termFontTexLocation = gl.getUniformLocation(termProgram, 'uFont');
+  termGeoLocation = gl.getAttribLocation(termProgram, 'aGeo');
+  termCharLocation = gl.getAttribLocation(termProgram, 'aChar');
 
   // Terminal framebuffer & texture
   termFrameBuf = gl.createFramebuffer();
@@ -854,8 +871,8 @@ function init() {
   compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
 
   // Background image
-  bgTex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, bgTex);
+  bgImageTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, bgImageTex);
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
@@ -880,9 +897,9 @@ function init() {
   vs = document.getElementById('bg-vs').textContent;
   fs = document.getElementById('bg-fs').textContent;
   bgProgram = createProgram(vs, fs);
-  bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGTex');
-  screenSize2Location = gl.getUniformLocation(bgProgram, 'uScreenSize');
-  time2Location = gl.getUniformLocation(bgProgram, 'uTime');
+  bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGImageTex');
+  bgScreenSizeLocation = gl.getUniformLocation(bgProgram, 'uScreenSize');
+  bgTimeLocation = gl.getUniformLocation(bgProgram, 'uTime');
   bgSizeLocation = gl.getUniformLocation(bgProgram, 'uBGSize');
   bgPositionLocation = gl.getAttribLocation(bgProgram, 'aPosition');
   bgTexCoordLocation = gl.getAttribLocation(bgProgram, 'aTexCoord');
@@ -967,26 +984,26 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(termProgram);
-  gl.uniform1f(timeLocation, parameters.time / 1000);
-  gl.uniform2f(screenSizeLocation, parameters.screenWidth, parameters.screenHeight);
-  gl.uniform2f(gridSizeLocation, parameters.gridWidth, parameters.gridHeight);
+  gl.uniform1f(termTimeLocation, parameters.time / 1000);
+  gl.uniform2f(termScreenSizeLocation, parameters.screenWidth, parameters.screenHeight);
+  gl.uniform2f(termGridSizeLocation, parameters.gridWidth, parameters.gridHeight);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, fontTex);
-  gl.uniform1i(fontTexLocation, 0);
+  gl.bindTexture(gl.TEXTURE_2D, termFontTex);
+  gl.uniform1i(termFontTexLocation, 0);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, geoBuffer);
-  gl.vertexAttribPointer(geoLocation, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(geoLocation);
+  gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer);
+  gl.vertexAttribPointer(termGeoLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(termGeoLocation);
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, charBuffer);
-  gl.vertexAttribPointer(charLocation, 2, gl.FLOAT, false, 0, 0);
-  gl.enableVertexAttribArray(charLocation);
+  gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer);
+  gl.vertexAttribPointer(termCharLocation, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(termCharLocation);
 
   gl.drawArrays(gl.TRIANGLES, 0, term.buffer.length * 3);
 
-  gl.disableVertexAttribArray(geoLocation);
-  gl.disableVertexAttribArray(charLocation);
+  gl.disableVertexAttribArray(termGeoLocation);
+  gl.disableVertexAttribArray(termCharLocation);
 
   gl.bindTexture(gl.TEXTURE_2D, termTex);
   gl.generateMipmap(gl.TEXTURE_2D);
@@ -1028,12 +1045,12 @@ function render() {
   gl.clear(gl.COLOR_BUFFER_BIT);
 
   gl.useProgram(bgProgram);
-  gl.uniform1f(time2Location, parameters.time / 1000);
-  gl.uniform2f(screenSize2Location, parameters.screenWidth, parameters.screenHeight);
+  gl.uniform1f(bgTimeLocation, parameters.time / 1000);
+  gl.uniform2f(bgScreenSizeLocation, parameters.screenWidth, parameters.screenHeight);
   gl.uniform2f(bgSizeLocation, bgImage.width, bgImage.height);
 
   gl.activeTexture(gl.TEXTURE0);
-  gl.bindTexture(gl.TEXTURE_2D, bgTex);
+  gl.bindTexture(gl.TEXTURE_2D, bgImageTex);
   gl.uniform1i(bgImageTexLocation, 0);
 
   gl.bindBuffer(gl.ARRAY_BUFFER, bgPositionBuffer);
