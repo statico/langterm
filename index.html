@@ -317,14 +317,27 @@ void main() {
 <!-- Compositing vertex shader. Nothing special other than that we're now doing 3D. -->
 <script id="comp-vs" type="x-shader/vertex">
 uniform mediump vec2 uScreenSize;
+uniform mediump vec2 uBGSize;
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
 varying vec2 vTexCoord;
 
 void main() {
+
+  // Place the terminal texture over the background to align up with the
+  // background-size: cover emulation we do in the background shader.
   vec3 pos = aPosition;
-  float rs = uScreenSize.x / uScreenSize.y;
-  pos.x /= rs;
+  vec2 s = uScreenSize; // Screen
+  vec2 i = uBGSize; // Image
+  float rs = s.x / s.y;
+  float ri = i.x / i.y;
+  if (rs < ri) {
+    pos.x /= rs;
+  } else {
+    pos.x /= ri;
+    pos.y *= 1.0 + ((rs - ri) / 2.0); // Not perfect but good enough.
+  }
+
   gl_Position = vec4(pos, 1.0);
   vTexCoord = aTexCoord;
 }
@@ -344,7 +357,7 @@ void main() {
   gl_FragColor.a = gl_FragColor.r;
 
   // Uncomment to show a white border, which helps with positioning:
-  if (vTexCoord.x < 0.005 || vTexCoord.x > 0.995 || vTexCoord.y < 0.005 || vTexCoord.y > 0.995) gl_FragColor += 0.5;
+  //if (vTexCoord.x < 0.005 || vTexCoord.x > 0.995 || vTexCoord.y < 0.005 || vTexCoord.y > 0.995) gl_FragColor += 0.5;
 }
 </script>
 
@@ -584,10 +597,10 @@ term.addString(
 "Password: **********                          \n" +
 "logging in.....");
 
-term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#'); // XXXXXXXXXX
+// Uncomment to fill the terminal with #'s for positioning.
+//term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#');
 
 (function() {
-  return; // XXXXXXXXXXXXXXXXX
 
   var ENDPOINT = 'https://game.langworth.com';
 
@@ -685,6 +698,7 @@ var canvas,
   bgTexCoordLocation,
   bgTimeLocation,
 
+  compBGSizeLocation,
   compPositionBuffer,
   compPositionLocation,
   compPostTexLocation,
@@ -892,6 +906,7 @@ function init() {
   compProgram = createProgram(vs, fs);
   compPostTexLocation = gl.getUniformLocation(compProgram, 'uPostTex');
   compScreenSizeLocation = gl.getUniformLocation(compProgram, 'uScreenSize');
+  compBGSizeLocation = gl.getUniformLocation(compProgram, 'uBGSize');
   compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition');
   compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
 
@@ -954,7 +969,6 @@ function resize() {
   if (canvas.width != w || canvas.height != h) {
     canvas.width = parameters.screenWidth = w;
     canvas.height = parameters.screenHeight = h;
-    console.log(bgImage.width/bgImage.height, w/h); // XXXXXXXX
   }
 }
 
@@ -1067,6 +1081,7 @@ function render() {
 
   gl.useProgram(compProgram);
   gl.uniform2f(compScreenSizeLocation, parameters.screenWidth, parameters.screenHeight);
+  gl.uniform2f(compBGSizeLocation, bgImage.width, bgImage.height);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, postTex);
