@@ -23,10 +23,10 @@
        vignette and noise over the web page, but I wanted to do it all in GLSL as a learning
        example.
 
-    5) The terminal texture is rendered to a quad in 3D space with perspective. I could have just
-       rendered a polygon in 2D, but using a perspective matrix makes handling viewport resizing
-       a lot easier. I also had to enable GL blending to properly composite this texture over the
-       background image.
+    5) The terminal texture is rendered to a 2D quad. I initially used a 3D quad with a persepctive
+       matrix, but the field of view gets stretched with short/wide windows. Using 2D and writing my
+       own aspect ratio math in the shader looks better. Also, I had to enable GL blending to
+       properly composite this texture and its alpha channel over the background image.
 
     6) Text input gets added to a buffer. When you hit Enter, the input buffer is sent to an
        interactive fiction server running a custom story. See https://github.com/statico/ifhttp
@@ -780,7 +780,7 @@ function init() {
   }
 
   gl.disable(gl.DEPTH_TEST);
-  gl.enable(gl.BLEND);
+  gl.enable(gl.BLEND); // Needed for the composition shader.
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   // Terminal shader
