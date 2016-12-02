@@ -614,7 +614,6 @@ term.addString(
   var sessionID = sessionStorage.getItem('sessionID'),
       inputBuffer = '';
 
-  console.log(sessionID);
   if (!sessionID) {
     term.addString("logging in.....");
     createSession();
