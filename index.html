@@ -594,8 +594,8 @@ term.addString(
 "  /____/_/ /___/_/|_/_/  /_/   617-555-1337   \n" +
 "                                              \n" +
 "Username: ian                                 \n" +
-"Password: **********                          \n" +
-"logging in.....");
+"Password: **********                          \n"
+);
 
 // Uncomment to fill the terminal with #'s for positioning.
 //term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#');
@@ -611,13 +611,15 @@ term.addString(
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW);
   }
 
-  var sessionID = document.location.hash.substr(1),
+  var sessionID = sessionStorage.getItem('sessionID'),
       inputBuffer = '';
 
-  if (sessionID === '') {
+  console.log(sessionID);
+  if (!sessionID) {
+    term.addString("logging in.....");
     createSession();
   } else {
-    term.addString('\n\n');
+    term.addString("reconnecting.....\n\n");
     sendCommand('look');
   }
 
@@ -633,7 +635,8 @@ term.addString(
       dataType: 'json'
     }).done(function(data) {
       clearTimeout(timer);
-      document.location.hash = sessionID = data.session;
+      sessionID = data.session;
+      sessionStorage.setItem('sessionID', sessionID);
       term.addString('\n\n');
       term.addString(data.output, null, true);
       update();
