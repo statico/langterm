@@ -316,18 +316,23 @@ void main() {
 
 <!-- Compositing vertex shader. Nothing special other than that we're now doing 3D. -->
 <script id="comp-vs" type="x-shader/vertex">
+uniform mediump vec2 uScreenSize;
 attribute vec3 aPosition;
 attribute vec2 aTexCoord;
 varying vec2 vTexCoord;
 
 void main() {
-  gl_Position = vec4(aPosition, 1.0);
+  vec3 pos = aPosition;
+  float rs = uScreenSize.x / uScreenSize.y;
+  pos.x /= rs;
+  gl_Position = vec4(pos, 1.0);
   vTexCoord = aTexCoord;
 }
 </script>
 
 <!-- Compositing vertex shader. Nothing special. -->
 <script id="comp-fs" type="x-shader/fragment">
+uniform mediump vec2 uScreenSize;
 uniform sampler2D uPostTex;
 varying mediump vec2 vTexCoord;
 
@@ -339,7 +344,7 @@ void main() {
   gl_FragColor.a = gl_FragColor.r;
 
   // Uncomment to show a white border, which helps with positioning:
-  //if (vTexCoord.x < 0.01 || vTexCoord.x > 0.99 || vTexCoord.y < 0.01 || vTexCoord.y > 0.99) gl_FragColor += 0.2;
+  if (vTexCoord.x < 0.005 || vTexCoord.x > 0.995 || vTexCoord.y < 0.005 || vTexCoord.y > 0.995) gl_FragColor += 0.5;
 }
 </script>
 
@@ -579,7 +584,10 @@ term.addString(
 "Password: **********                          \n" +
 "logging in.....");
 
+term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#'); // XXXXXXXXXX
+
 (function() {
+  return; // XXXXXXXXXXXXXXXXX
 
   var ENDPOINT = 'https://game.langworth.com';
 
@@ -681,6 +689,7 @@ var canvas,
   compPositionLocation,
   compPostTexLocation,
   compProgram,
+  compScreenSizeLocation,
   compTexCoordBuffer,
   compTexCoordLocation,
 
@@ -817,10 +826,10 @@ function init() {
   postPositionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, postPositionBuffer);
   var geo = new Float32Array([
-     0.86,  0.68, 1,
-    -0.70,  0.70, 1,
-     0.88, -0.59, 1,
-    -0.67, -0.67, 1
+     0.94,  0.66, 1, // TR
+    -0.76,  0.66, 1, // TL
+     0.94, -0.57, 1, // BR
+    -0.72, -0.65, 1  // BL
   ]);
   gl.bufferData(gl.ARRAY_BUFFER, geo, gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
@@ -882,6 +891,7 @@ function init() {
   fs = document.getElementById('comp-fs').textContent;
   compProgram = createProgram(vs, fs);
   compPostTexLocation = gl.getUniformLocation(compProgram, 'uPostTex');
+  compScreenSizeLocation = gl.getUniformLocation(compProgram, 'uScreenSize');
   compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition');
   compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
 
@@ -944,6 +954,7 @@ function resize() {
   if (canvas.width != w || canvas.height != h) {
     canvas.width = parameters.screenWidth = w;
     canvas.height = parameters.screenHeight = h;
+    console.log(bgImage.width/bgImage.height, w/h); // XXXXXXXX
   }
 }
 
@@ -1055,6 +1066,7 @@ function render() {
   // Composite the terminal
 
   gl.useProgram(compProgram);
+  gl.uniform2f(compScreenSizeLocation, parameters.screenWidth, parameters.screenHeight);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, postTex);
