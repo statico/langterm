@@ -771,6 +771,17 @@ function init() {
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
+  // Terminal shader
+  vs = document.getElementById('term-vs').textContent;
+  fs = document.getElementById('term-fs').textContent;
+  termProgram = createProgram(vs, fs);
+  termTimeLocation = gl.getUniformLocation(termProgram, 'uTime');
+  termScreenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize');
+  termGridSizeLocation = gl.getUniformLocation(termProgram, 'uGridSize');
+  termFontTexLocation = gl.getUniformLocation(termProgram, 'uFont');
+  termGeoLocation = gl.getAttribLocation(termProgram, 'aGeo');
+  termCharLocation = gl.getAttribLocation(termProgram, 'aChar');
+
   // Terminal gemoetry buffer
   termGeoBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer);
@@ -793,17 +804,6 @@ function init() {
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fontImage);
   gl.bindTexture(gl.TEXTURE_2D, null);
 
-  // Terminal shader
-  vs = document.getElementById('term-vs').textContent;
-  fs = document.getElementById('term-fs').textContent;
-  termProgram = createProgram(vs, fs);
-  termTimeLocation = gl.getUniformLocation(termProgram, 'uTime');
-  termScreenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize');
-  termGridSizeLocation = gl.getUniformLocation(termProgram, 'uGridSize');
-  termFontTexLocation = gl.getUniformLocation(termProgram, 'uFont');
-  termGeoLocation = gl.getAttribLocation(termProgram, 'aGeo');
-  termCharLocation = gl.getAttribLocation(termProgram, 'aChar');
-
   // Terminal framebuffer & texture
   termFrameBuf = gl.createFramebuffer();
   gl.bindFramebuffer(gl.FRAMEBUFFER, termFrameBuf);
@@ -816,17 +816,13 @@ function init() {
   gl.bindTexture(gl.TEXTURE_2D, null);
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-  // Post-process framebuffer & texture
-  postFrameBuf = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, postFrameBuf);
-  postTex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, postTex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2048, 2048, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, postTex, 0);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  // Post-process shader
+  vs = document.getElementById('post-vs').textContent;
+  fs = document.getElementById('post-fs').textContent;
+  postProgram = createProgram(vs, fs);
+  postTermTexLocation = gl.getUniformLocation(postProgram, 'uTermTex');
+  postPositionLocation = gl.getAttribLocation(postProgram, 'aPosition');
+  postTexCoordLocation = gl.getAttribLocation(postProgram, 'aTexCoord');
 
   // Post-process geometry buffer
   postPositionBuffer = gl.createBuffer();
@@ -840,35 +836,28 @@ function init() {
   gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAT_COORDS, gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  // Post-process shader
-  vs = document.getElementById('post-vs').textContent;
-  fs = document.getElementById('post-fs').textContent;
-  postProgram = createProgram(vs, fs);
-  postTermTexLocation = gl.getUniformLocation(postProgram, 'uTermTex');
-  postPositionLocation = gl.getAttribLocation(postProgram, 'aPosition');
-  postTexCoordLocation = gl.getAttribLocation(postProgram, 'aTexCoord');
+  // Post-process framebuffer & texture
+  postFrameBuf = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, postFrameBuf);
+  postTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, postTex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2048, 2048, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, postTex, 0);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-  // Composition geometry buffer
-  compPositionBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, compPositionBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAD_GEO, gl.STATIC_DRAW);
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-  // Composition texture coordinate buffer
-  compTexCoordBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, compTexCoordBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAT_COORDS, gl.STATIC_DRAW);
-  gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-  // Composition shader
-  vs = document.getElementById('comp-vs').textContent;
-  fs = document.getElementById('comp-fs').textContent;
-  compProgram = createProgram(vs, fs);
-  compMVMatrixLocation = gl.getUniformLocation(compProgram, 'uMVMatrix');
-  compPMatrixLocation = gl.getUniformLocation(compProgram, 'uPMatrix');
-  compPostTexLocation = gl.getUniformLocation(compProgram, 'uPostTex');
-  compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition');
-  compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
+  // Background shader
+  vs = document.getElementById('bg-vs').textContent;
+  fs = document.getElementById('bg-fs').textContent;
+  bgProgram = createProgram(vs, fs);
+  bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGImageTex');
+  bgScreenSizeLocation = gl.getUniformLocation(bgProgram, 'uScreenSize');
+  bgTimeLocation = gl.getUniformLocation(bgProgram, 'uTime');
+  bgSizeLocation = gl.getUniformLocation(bgProgram, 'uBGSize');
+  bgPositionLocation = gl.getAttribLocation(bgProgram, 'aPosition');
+  bgTexCoordLocation = gl.getAttribLocation(bgProgram, 'aTexCoord');
 
   // Background image
   bgImageTex = gl.createTexture();
@@ -893,16 +882,27 @@ function init() {
   gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAT_COORDS, gl.STATIC_DRAW);
   gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-  // Background shader
-  vs = document.getElementById('bg-vs').textContent;
-  fs = document.getElementById('bg-fs').textContent;
-  bgProgram = createProgram(vs, fs);
-  bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGImageTex');
-  bgScreenSizeLocation = gl.getUniformLocation(bgProgram, 'uScreenSize');
-  bgTimeLocation = gl.getUniformLocation(bgProgram, 'uTime');
-  bgSizeLocation = gl.getUniformLocation(bgProgram, 'uBGSize');
-  bgPositionLocation = gl.getAttribLocation(bgProgram, 'aPosition');
-  bgTexCoordLocation = gl.getAttribLocation(bgProgram, 'aTexCoord');
+  // Composition shader
+  vs = document.getElementById('comp-vs').textContent;
+  fs = document.getElementById('comp-fs').textContent;
+  compProgram = createProgram(vs, fs);
+  compMVMatrixLocation = gl.getUniformLocation(compProgram, 'uMVMatrix');
+  compPMatrixLocation = gl.getUniformLocation(compProgram, 'uPMatrix');
+  compPostTexLocation = gl.getUniformLocation(compProgram, 'uPostTex');
+  compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition');
+  compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord');
+
+  // Composition geometry buffer
+  compPositionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, compPositionBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAD_GEO, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  // Composition texture coordinate buffer
+  compTexCoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, compTexCoordBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, UNIT_QUAT_COORDS, gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
 }
 
