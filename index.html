@@ -618,7 +618,7 @@ term.addString(
     term.addString("logging in.....");
     createSession();
   } else {
-    term.addString("reconnecting.....\n\n");
+    term.addString("reconnecting.....");
     sendCommand('look');
   }
 
@@ -663,10 +663,10 @@ term.addString(
       } catch (e) {
         error = xhr.statusText;
       }
-      term.addString('?ERROR? ' + error + '\n', null, true);
       if (/No such session/.test(error)) {
-        term.addString("reconnecting...");
         createSession();
+      } else {
+        term.addString('?ERROR? ' + error + '\n', null, true);
       }
       update();
     });
