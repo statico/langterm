@@ -153,8 +153,8 @@ vec2 iResolution = vec2(2048.0, 2048.0); // Since this is ported from ShaderToy
 // Emulated input resolution.
 #if 1
   // Fix resolution to set amount. Trial and error shows that good values for the Y axis
-  // are number of pixels per font character (8) * number of cells (60x24) * 3
-vec2 res = vec2(480.0, 576.0);
+  // are number of pixels per font character (8) * number of cells (60 or 24) * 3
+vec2 res = vec2(60.0 * 8.0, 24.0 * 8.0 * 3.0);
 #else
   // Optimize for resize.
 vec2 res = iResolution.xy / 6.0;
@@ -457,8 +457,9 @@ void main() {
 
   bool value = texture2D(uFont, vCharCoord).r >= 1.0;
   bool inverse = mod(vAttr / ATTR_INVERSE, 2.0) >= 1.0; // No bit shifting in GLSL. Maybe I'm wrong.
-  if (value && inverse) discard;
-  if (!value && !inverse) discard;
+
+  // Comment to show only filled bars of text. Good for positioning.
+  if ((value && inverse) || (!value && !inverse)) discard;
 
   gl_FragColor = COLOR;
 }
