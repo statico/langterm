@@ -85,6 +85,7 @@ a:hover {
   text-decoration: none;
 }
 #content {
+  display: none; /* Overridden by JavaScript */
   width: 50%;
   margin-bottom: 5%;
   text-align: center;
@@ -701,7 +702,7 @@ term.addString(
   var ENDPOINT = 'https://game.langworth.com'
 
   function update () {
-    if (!canvas) return;
+    if (!gl) return;
     gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
     gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer)
@@ -899,21 +900,22 @@ function init () {
 
   var vs, fs
   canvas = document.querySelector('canvas')
+  var content = document.querySelector('#content')
 
   try {
     gl = canvas.getContext('experimental-webgl', {alpha: false})
   } catch (error) {}
   if (!gl) {
     console.error('Cannot create WebGL context.')
-    canvas.style.display = 'none';
-    canvas = null;
+    content.style.display = 'block'
+    canvas.style.display = 'none'
     return;
   }
 
   if (document.body.clientWidth <= 768) {
     gl = null;
-    canvas.style.display = 'none';
-    canvas = null;
+    content.style.display = 'block'
+    canvas.style.display = 'none'
     return;
   }
 
@@ -1100,7 +1102,7 @@ function createShader (src, type) {
 }
 
 function resize () {
-  if (!canvas) return;
+  if (!gl) return;
   var r = window.devicePixelRatio || 1
   var w = Math.floor(gl.canvas.clientWidth * r)
   var h = Math.floor(gl.canvas.clientHeight * r)
