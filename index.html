@@ -1,8 +1,8 @@
 <!doctype html>
 <!--
 
-  WebGL-based VT220 emulator. Made as a learning example and frontend for a cute text adventure
-  game. Public domain, use as you wish.
+  WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL/non-desktop browsers. Made
+  as a learning example and frontend for a cute text adventure game. Public domain, use as you wish.
 
   Basic outline:
 
@@ -40,16 +40,106 @@
 <html dir="ltr" lang="en-US">
 <head>
 
-<title>langterm</title>
-<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<title>Ian Langworth ☠</title>
+<meta charset="utf-8" />
+<meta name=viewport content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="NOODP" />
+<link rel="shortcut icon" href="https://www.langworth.com/favicon.png"/>
+
+<meta name="description" content="Founder, software engineer, guy who does things." />
+<meta name="keywords" content="Ian Langworth, Artillery, startups, Perl, JavaScript, WebGL, gaming, gamedev, WebGL, HTML5, git, programming, Facebook profile, LinkedIn profile" />
+
+<meta property="og:title" content="Ian Langworth ☠" />
+<meta property="og:site_name" content="Ian Langworth ☠" />
+<meta property="og:url" content="https://www.langworth.com/" />
+<meta property="og:description" content="Founder, software engineer, guy who does things." />
+<meta property="og:image" content="https://www.langworth.com/screenshot.jpg" />
+
+<link href="https://fonts.googleapis.com/css?family=Press+Start+2P" rel="stylesheet" />
 
 <style type="text/css">
-html, body { background: #222; color: #eee; margin: 0; overflow: hidden; width: 100%; height: 100%; }
-canvas { width: 100%; height: 100%; }
+* {
+  margin: 0;
+  padding: 0;
+}
+html, body {
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+body {
+  background: #5c3e34 url(term.jpg) no-repeat center center fixed;
+  background-size: cover;
+  display: flex;
+  font-size: 14px;
+  font-family: 'Press Start 2P', sans-serif;
+  text-transform: uppercase;
+  font-weight: 100;
+  align-items: center;
+  justify-content: center;
+}
+body, a {
+  color: #e06b0b;
+}
+a:hover {
+  text-decoration: none;
+}
+#content {
+  width: 50%;
+  margin-bottom: 5%;
+  text-align: center;
+  padding: 2%;
+}
+ul {
+  font-size: 20px;
+}
+p {
+  line-height: 1.5;
+}
+h1 {
+  margin-bottom: 20px;
+  font-size: 50px;
+  font-weight: 100;
+}
+canvas {
+  width: 100%;
+  height: 100%;
+}
+li {
+  list-style-type: none;
+  display: inline-block;
+  margin-right: 1em;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 992px) {
+  body {
+  }
+  #content {
+    width: auto;
+  }
+  li {
+    display: block;
+  }
+}
 </style>
 
 </head>
 <body>
+
+<div id="content">
+  <h1>Ian Langworth</h1>
+  <ul>
+    <li><a href="https://statico.github.io/">Blog</a></li>
+    <li><a href="https://github.com/statico">GitHub</a></li>
+    <li><a href="https://shop.oreilly.com/product/9780596100926.do">Perl Testing Book</a></li>
+    <li><a href="https://www.linkedin.com/in/ianlangworth">LinkedIn</a></li>
+    <li><a href="https://twitter.com/statico">Twitter</a></li>
+    <li><a href="https://github.com/statico/dotfiles">Dotfiles</a></li>
+    <li><a href="/pubkey.asc">Public Key</a></li>
+  </ul>
+  <!-- <p>Come back with a modern desktop browser for an interactive experience</p> -->
+</div>
 
 <canvas></canvas>
 
@@ -611,6 +701,7 @@ term.addString(
   var ENDPOINT = 'https://game.langworth.com'
 
   function update () {
+    if (!canvas) return;
     gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
     gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer)
@@ -813,8 +904,20 @@ function init () {
     gl = canvas.getContext('experimental-webgl', {alpha: false})
   } catch (error) {}
   if (!gl) {
-    throw new Error('Cannot create WebGL context.')
+    console.error('Cannot create WebGL context.')
+    canvas.style.display = 'none';
+    canvas = null;
+    return;
   }
+
+  if (document.body.clientWidth <= 768) {
+    gl = null;
+    canvas.style.display = 'none';
+    canvas = null;
+    return;
+  }
+
+  document.querySelector('#content').style.display = 'none';
 
   gl.disable(gl.DEPTH_TEST)
   gl.enable(gl.BLEND) // Needed for the composition shader.
@@ -997,6 +1100,7 @@ function createShader (src, type) {
 }
 
 function resize () {
+  if (!canvas) return;
   var r = window.devicePixelRatio || 1
   var w = Math.floor(gl.canvas.clientWidth * r)
   var h = Math.floor(gl.canvas.clientHeight * r)
