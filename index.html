@@ -51,9 +51,6 @@ canvas { width: 100%; height: 100%; }
 
 <canvas></canvas>
 
-<!-- Because it makes XHR easy. -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-
 <!-- Background vertex shader. Nothing special. -->
 <script id="bg-vs" type="x-shader/vertex">
 attribute vec3 aPosition;
@@ -626,17 +623,36 @@ term.addString(
     sendCommand('look')
   }
 
+  function jsonXHR (url, body, cb) {
+    var req = new XMLHttpRequest()
+    req.open(body ? 'POST' : 'GET', url, true)
+    if (body) req.setRequestHeader('content-type', 'application/json')
+    req.onload = function () {
+      try {
+        var obj = JSON.parse(req.responseText)
+      } catch (e) {
+        return cb(req.statusText)
+      }
+      if (obj.error) return cb(obj.error)
+      if (req.status >= 200 && req.status < 400) {
+        cb(null, obj)
+      } else {
+        cb(req.statusText)
+      }
+    }
+    req.onerror = function () {
+      cb("Request to " + url + " failed: " + req.statusText)
+    }
+    req.send(body ? JSON.stringify(body) : undefined)
+  }
+
   function createSession () {
     var timer = setInterval(function () {
       term.addChar('.')
       update()
     }, 250)
 
-    $.ajax({
-      url: ENDPOINT + '/new',
-      method: 'get',
-      dataType: 'json'
-    }).done(function (data) {
+    jsonXHR(ENDPOINT + '/new', null, function (err, data) {
       clearTimeout(timer)
       sessionID = data.session
       sessionStorage.setItem('sessionID', sessionID)
@@ -647,32 +663,23 @@ term.addString(
   }
 
   function sendCommand (message) {
-    $.ajax({
-      url: ENDPOINT + '/send',
-      method: 'post',
-      data: JSON.stringify({ session: sessionID, message: message }),
-      contentType: 'application/json'
-    }).done(function (data) {
-      var match = String(data.output).match(/OPENURL:(\S+)/)
-      if (match) {
-        document.location.href = match[1]
-      } else {
-        term.addString(data.output, null, true)
+    jsonXHR(ENDPOINT + '/send', { session: sessionID, message: message }, function (err, data) {
+      if (err) {
+        if (/No such session/.test(err)) {
+          createSession()
+        } else {
+          term.addString('?ERROR? ' + err + '\n', null, true)
+        }
         update()
-      }
-    }).fail(function (xhr) {
-      var error
-      try {
-        error = JSON.parse(xhr.responseText).error
-      } catch (e) {
-        error = xhr.statusText
-      }
-      if (/No such session/.test(error)) {
-        createSession()
       } else {
-        term.addString('?ERROR? ' + error + '\n', null, true)
+        var match = String(data.output).match(/OPENURL:(\S+)/)
+        if (match) {
+          document.location.href = match[1]
+        } else {
+          term.addString(data.output, null, true)
+          update()
+        }
       }
-      update()
     })
   }
 
