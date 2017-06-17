@@ -1,0 +1,54 @@
+==================================================================
+https://keybase.io/statico
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of https://www.langworth.com
+  * I am statico (https://keybase.io/statico) on keybase.
+  * I have a public key ASAxQmxw0LCnLL0yEr_frZuu8wr3emVdFIH4M1RDoSf06go
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "eldest_kid": "0101d5147617a074901075fbe79aa86f55614dc0867f3777f86cebea98cd45bc3eac0a",
+            "host": "keybase.io",
+            "kid": "012031426c70d0b0a72cbd3212bfdfad9baef30af77a655d1481f8335443a127f4ea0a",
+            "uid": "7b617cae741213abe068598052fc3700",
+            "username": "statico"
+        },
+        "service": {
+            "hostname": "www.langworth.com",
+            "protocol": "https:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "client": {
+        "name": "keybase.io go client",
+        "version": "1.0.18"
+    },
+    "ctime": 1489679931,
+    "expire_in": 504576000,
+    "merkle_root": {
+        "ctime": 1489679884,
+        "hash": "58ef5dca076bc30ff543480e78897f51e164e108914d03ca217440f6216afc45b0ff873a0c7c3fe879f7d9648a263f8debd9a7313d180575742a3ca30cb4f317",
+        "seqno": 962711
+    },
+    "prev": "b1ba1febaca457a6ecb74c95fedb839ffd0e081f526261c6616b4e02d0e63196",
+    "seqno": 28,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEgMUJscNCwpyy9MhK/362brvMK93plXRSB+DNUQ6En9OoKp3BheWxvYWTFAvl7ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTAxZDUxNDc2MTdhMDc0OTAxMDc1ZmJlNzlhYTg2ZjU1NjE0ZGMwODY3ZjM3NzdmODZjZWJlYTk4Y2Q0NWJjM2VhYzBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwMzE0MjZjNzBkMGIwYTcyY2JkMzIxMmJmZGZhZDliYWVmMzBhZjc3YTY1NWQxNDgxZjgzMzU0NDNhMTI3ZjRlYTBhIiwidWlkIjoiN2I2MTdjYWU3NDEyMTNhYmUwNjg1OTgwNTJmYzM3MDAiLCJ1c2VybmFtZSI6InN0YXRpY28ifSwic2VydmljZSI6eyJob3N0bmFtZSI6Ind3dy5sYW5nd29ydGguY29tIiwicHJvdG9jb2wiOiJodHRwczoifSwidHlwZSI6IndlYl9zZXJ2aWNlX2JpbmRpbmciLCJ2ZXJzaW9uIjoxfSwiY2xpZW50Ijp7Im5hbWUiOiJrZXliYXNlLmlvIGdvIGNsaWVudCIsInZlcnNpb24iOiIxLjAuMTgifSwiY3RpbWUiOjE0ODk2Nzk5MzEsImV4cGlyZV9pbiI6NTA0NTc2MDAwLCJtZXJrbGVfcm9vdCI6eyJjdGltZSI6MTQ4OTY3OTg4NCwiaGFzaCI6IjU4ZWY1ZGNhMDc2YmMzMGZmNTQzNDgwZTc4ODk3ZjUxZTE2NGUxMDg5MTRkMDNjYTIxNzQ0MGY2MjE2YWZjNDViMGZmODczYTBjN2MzZmU4NzlmN2Q5NjQ4YTI2M2Y4ZGViZDlhNzMxM2QxODA1NzU3NDJhM2NhMzBjYjRmMzE3Iiwic2Vxbm8iOjk2MjcxMX0sInByZXYiOiJiMWJhMWZlYmFjYTQ1N2E2ZWNiNzRjOTVmZWRiODM5ZmZkMGUwODFmNTI2MjYxYzY2MTZiNGUwMmQwZTYzMTk2Iiwic2Vxbm8iOjI4LCJ0YWciOiJzaWduYXR1cmUifaNzaWfEQCzCqFqqas6pWnY/aZBwkwsN8fhBmK0SLuVdCHgbo+6tdExClXGb9Uza9OBTDA59hpxfJDfyBY1cm8SSywF+bgaoc2lnX3R5cGUgpGhhc2iCpHR5cGUIpXZhbHVlxCDLcjK4pP5OlEDZ30u+J1/M+yVxD4jra1YnhE2CkUZ1b6N0YWfNAgKndmVyc2lvbgE=
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/statico
+
+==================================================================
