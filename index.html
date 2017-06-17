@@ -372,6 +372,8 @@ varying vec2 vCharCoord;
 varying vec2 vArea;
 varying float vAttr;
 
+const float EPSILON = 0.000001;
+
 const float ATTR_CURSOR = 1.0;
 const float ATTR_INVERSE = 2.0;
 const float ATTR_BLINK = 4.0;
@@ -391,7 +393,7 @@ void main() {
 
   // Char is our character space triangle vertex. (0,0) means first col & row.
   float i = aGeo[0];
-  float row = floor(i/uGridSize.x);
+  float row = floor(i/uGridSize.x + EPSILON);
   float col = i - row * uGridSize.x;
   vec2 char = vec2(col, row);
   float k = aGeo[1];
@@ -444,7 +446,7 @@ const float ATTR_BLINK = 4.0;
 
 const vec4 COLOR = vec4(.95, .45, .02, 1.0); // Amber text color
 
-const float EPSILON = 0.000;
+const float EPSILON = 0.000001;
 
 void main() {
   // Trim the points of the triangle so we only draw the rectangle.
