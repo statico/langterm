@@ -29,7 +29,9 @@
        properly composite this texture and its alpha channel over the background image.
 
     6) Text input gets added to a buffer. When you hit Enter, the input buffer is sent to an
-       interactive fiction server running a custom story. See https://github.com/statico/ifhttp
+       interactive fiction server running a custom story made with Inform7. See
+       https://github.com/statico/ifhttp for the server. The story is closed source so you'll have
+       to figure it out on your own ;)
 
   I started with WebGL Boilerplate (github.com/paulirish/webgl-boilerplate). For more involved
   projects and to reduce repetition, consider using ThreeJS.
@@ -150,8 +152,8 @@ vec2 iResolution = vec2(2048.0, 2048.0); // Since this is ported from ShaderToy
 
 // Emulated input resolution.
 #if 1
-  // Fix resolution to set amount. Trial and error looks like good values are
-  // number of pixels (8) * number of cells (60x24) * 3.
+  // Fix resolution to set amount. Trial and error shows that good values for the Y axis
+  // are number of pixels per font character (8) * number of cells (60x24) * 3
 vec2 res = vec2(480.0, 576.0);
 #else
   // Optimize for resize.
