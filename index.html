@@ -71,10 +71,11 @@ body {
   background: #5c3e34 url(term.jpg) no-repeat center center fixed;
   background-size: cover;
   display: flex;
-  font-size: 14px;
+  font-size: 20px;
   font-family: 'Press Start 2P', sans-serif;
   text-transform: uppercase;
   font-weight: 100;
+  line-height: 1.4;
   align-items: center;
   justify-content: center;
 }
@@ -90,12 +91,6 @@ a:hover {
   margin-bottom: 5%;
   text-align: center;
   padding: 2%;
-}
-ul {
-  font-size: 20px;
-}
-p {
-  line-height: 1.5;
 }
 h1 {
   margin-bottom: 20px;
@@ -114,14 +109,14 @@ li {
 }
 
 @media (max-width: 992px) {
-  body {
-  }
-  #content {
-    width: auto;
-  }
-  li {
-    display: block;
-  }
+  #content { width: auto; margin: 20px; }
+  h1 { font-size: 30px; }
+  li { display: block; }
+}
+@media (max-height: 414px) {
+  h1 { font-size: 20px; }
+  body { font-size: 14px; }
+  li { margin-bottom: 10px; }
 }
 </style>
 
