@@ -150,9 +150,9 @@ vec2 iResolution = vec2(2048.0, 2048.0); // Since this is ported from ShaderToy
 
 // Emulated input resolution.
 #if 1
-  // Fix resolution to set amount.
-  // NOTE: Terminal is 60x24 characters and font size is 8x8. This took some tweaking.
-vec2 res = vec2(480.0, 240.0);
+  // Fix resolution to set amount. Trial and error looks like good values are
+  // number of pixels (8) * number of cells (60x24) * 3.
+vec2 res = vec2(480.0, 576.0);
 #else
   // Optimize for resize.
 vec2 res = iResolution.xy / 6.0;
