@@ -716,7 +716,7 @@ term.addString(
     term.addString('logging in.....')
     createSession()
   } else {
-    term.addString('reconnecting.....')
+    term.addString('restoring session.....\n')
     sendCommand('look')
   }
 
@@ -773,6 +773,7 @@ term.addString(
         if (match) {
           document.location.href = match[1]
         } else {
+          term.addChar('\n')
           term.addString(data.output, null, true)
           update()
         }
