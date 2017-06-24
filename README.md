@@ -17,4 +17,4 @@ Public domain.
 - [Original VT520 photo](https://goo.gl/AHU79T) by Ratko Grbic (modified by me to remove text)
 - [Inform7](http://inform7.com/) was used to create the story
 - [ifhttp](https://github.com/statico/ifhttp) runs the story
-- [WebGL Boilerplate](github.com/paulirish/webgl-boilerplate)
+- [WebGL Boilerplate](https://github.com/paulirish/webgl-boilerplate)
