@@ -709,6 +709,8 @@ term.addString(
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW)
   }
 
+  if (document.location.search.substr(1) === 'new') sessionStorage.clear();
+
   var sessionID = sessionStorage.getItem('sessionID')
   var inputBuffer = ''
 
