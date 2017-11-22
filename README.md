@@ -3,7 +3,7 @@
 This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL/non-desktop
 browsers. Made as a learning example and frontend for a cute text adventure game.
 
-Also used as my home page on https://www.langworth.com/, hence the extra files.
+Also used as my home page on https://langworth.com/, hence the extra files.
 
 Public domain.
 
