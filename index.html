@@ -575,9 +575,12 @@ var Terminal = (function () {
     this.clear()
   }
 
-  Terminal.ATTR_CURSOR = 1
-  Terminal.ATTR_INVERSE = 2
-  Terminal.ATTR_BLINK = 4
+  var ATTR_CURSOR = 1
+  var ATTR_INVERSE = 2
+  var ATTR_BLINK = 4
+
+  var INVERSE_ON = '\u200f'
+  var INVERSE_OFF = '\u200e'
 
   Terminal.prototype.clear = function () {
     var i, len
@@ -590,14 +593,26 @@ var Terminal = (function () {
     this._dirty = true
   }
 
-  Terminal.prototype.addString = function (s, attrs, wrap) {
-    if (!s.length) return
+  Terminal.prototype.addString = function (str, wrap) {
+    if (!str.length) return
     if (wrap) {
       // https://www.rosettacode.org/wiki/Word_wrap#JavaScript
-      s = s.match(RegExp('.{1,' + (this.width - 2) + '}(\\s|$)', 'g')).join('\n')
+      str = str.match(RegExp('.{1,' + (this.width - 2) + '}(\\s|$)', 'g')).join('\n')
     }
-    var _this = this
-    s.split('').forEach(function (c) { _this.addChar(c, attrs) })
+    var attrs = 0
+    for (var i = 0; i < str.length; i++) {
+      var c = str.charAt(i)
+      switch (c) {
+        case INVERSE_ON:
+          attrs |= ATTR_INVERSE
+          break
+        case INVERSE_OFF:
+          attrs &= ~ATTR_INVERSE
+          break
+        default:
+          this.addChar(c, attrs)
+      }
+    }
   }
 
   Terminal.prototype.addChar = function (c, attrs) {
@@ -649,7 +664,7 @@ var Terminal = (function () {
       var a = this.attrs[i]
       var y = Math.floor(i / this.width)
       var x = i - y * this.width
-      if (this.cursor.x === x && this.cursor.y === y) a |= Terminal.ATTR_CURSOR
+      if (this.cursor.x === x && this.cursor.y === y) a |= ATTR_CURSOR
       this._charBuffer[j + 0] = c
       this._charBuffer[j + 1] = a
       this._charBuffer[j + 2] = c
@@ -760,7 +775,7 @@ term.addString(
       sessionID = data.session
       sessionStorage.setItem('sessionID', sessionID)
       term.addString('\n\n')
-      term.addString(data.output, null, true)
+      term.addString(data.output, true)
       update()
     })
   }
@@ -771,7 +786,7 @@ term.addString(
         if (/No such session/.test(err)) {
           createSession()
         } else {
-          term.addString('?ERROR? ' + err + '\n', null, true)
+          term.addString('?ERROR? ' + err + '\n', true)
         }
         update()
       } else {
@@ -780,7 +795,7 @@ term.addString(
           document.location.href = match[1]
         } else {
           term.addChar('\n')
-          term.addString(data.output, null, true)
+          term.addString(data.output, true)
           update()
         }
       }
