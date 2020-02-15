@@ -568,9 +568,9 @@ var Terminal = (function () {
     this.height = 24
     this.page = this.width * this.height
     this.cursor = { x: 0, y: 0, visible: true }
-    this.buffer = new Array(this.page * 10) // 10 pages of scrollback
+    this.buffer = new Array(this.page * 5) // 5 pages of scrollback
     this.attrs = new Array(this.buffer.length)
-    this.offset = this.page * 9
+    this.offset = this.page * 4
     for (var i = 0, len = this.buffer.length; i < len; i++) {
       this.buffer[i] = ' '
       this.attrs[i] = 0
