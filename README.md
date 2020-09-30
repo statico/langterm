@@ -5,6 +5,8 @@ browsers. Made as a learning example and frontend for a cute text adventure game
 
 Also used as my home page on https://langworth.com/, hence the extra files.
 
+This connects to an [ifhttp](https://github.com/statico/ifhttp) server which runs [the game](https://github.com/statico/the-archive-public).
+
 Public domain.
 
 <img src="https://github.com/statico/langterm/blob/master/screenshot.jpg?raw=true" width="250"/>
