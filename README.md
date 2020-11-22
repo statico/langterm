@@ -29,6 +29,11 @@ This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL
 
 I started with WebGL Boilerplate (github.com/paulirish/webgl-boilerplate). For more involved projects and to reduce repetition, I would consider using ThreeJS.
 
+## Build/Test
+
+1. [Get a Glulx game](https://github.com/statico/glulxe-httpd#get-started) and run [statico/glulxe-httpd](https://github.com/statico/glulxe-httpd)
+2. Serve this directory with something like `python -m SimpleHTTPServer` and go to http://localhost:8000
+
 ## Credits
 
 - [Apple II font](http://www.kreativekorp.com/software/fonts/apple2.shtml) from KreativeKorp
