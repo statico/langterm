@@ -1,195 +1,20 @@
-var Terminal = (function () {
-  function Terminal() {
-    this.width = 60
-    this.height = 24
-    this.page = this.width * this.height
-    this.cursor = { x: 0, y: 0, visible: true }
-    this.buffer = new Array(this.page * 5) // 5 pages of scrollback
-    this.attrs = new Array(this.buffer.length)
-    this.offset = this.page * 4
-    for (var i = 0, len = this.buffer.length; i < len; i++) {
-      this.buffer[i] = ' '
-      this.attrs[i] = 0
-    }
-    this._charBuffer = new Float32Array(this.buffer.length * 6)
-    this._geoBuffer = new Float32Array(this.buffer.length * 6)
-    this.clear()
-  }
-
-  var ATTR_CURSOR = 1
-  var ATTR_INVERSE = 2
-  var ATTR_BLINK = 4
-
-  var INVERSE_ON = '\u200f'
-  var INVERSE_OFF = '\u200e'
-
-  Terminal.prototype.clear = function () {
-    this.end()
-    this.cursor.x = 0
-    this.cursor.y = 0
-    var o = this.offset
-    for (var i = 0, len = this.page; i < len; i++) {
-      this.buffer[i + o] = ' '
-      this.attrs[i + o] = 0
-    }
-    this._dirty = true
-  }
-
-  Terminal.prototype.addString = function (str, wrap) {
-    this.end()
-    if (!str.length) return
-    if (wrap) {
-      // https://www.rosettacode.org/wiki/Word_wrap#JavaScript
-      str = str
-        .match(RegExp('.{1,' + (this.width - 2) + '}(\\s|$)', 'g'))
-        .join('\n')
-    }
-    var attrs = 0
-    for (var i = 0; i < str.length; i++) {
-      var c = str.charAt(i)
-      switch (c) {
-        case INVERSE_ON:
-          attrs |= ATTR_INVERSE
-          break
-        case INVERSE_OFF:
-          attrs &= ~ATTR_INVERSE
-          break
-        default:
-          this.addChar(c, attrs)
-      }
-    }
-  }
-
-  Terminal.prototype.addChar = function (c, attrs) {
-    this.end()
-    var i = this.cursor.y * this.width + this.cursor.x
-    var o = this.offset
-    if (c !== '\n') {
-      this.buffer[i + o] = c
-      this.attrs[i + o] = attrs || 0
-    }
-    if (c === '\n' || this.cursor.x >= this.width - 1) {
-      this.cursor.x = 0
-      this.cursor.y++
-    } else {
-      this.cursor.x++
-    }
-    if (this.cursor.y >= this.height) {
-      this.cursor.y--
-      var len
-      var lastLine = this.buffer.length - this.width
-      for (i = 0, len = this.buffer.length; i < len; i++) {
-        if (i < lastLine) {
-          this.buffer[i] = this.buffer[i + this.width]
-          this.attrs[i] = this.attrs[i + this.width]
-        } else {
-          this.buffer[i] = ' '
-          this.attrs[i] = 0
-        }
-      }
-    }
-    this._dirty = true
-  }
-
-  Terminal.prototype.pageUp = function () {
-    this.offset = Math.max(0, this.offset - this.page)
-    this.cursor.visible = false
-    this._dirty = true
-  }
-
-  Terminal.prototype.pageDown = function () {
-    this.offset = Math.min(
-      this.buffer.length - this.page,
-      this.offset + this.page
-    )
-    this.cursor.visible = this.offset === this.buffer.length - this.page
-    this._dirty = true
-  }
-
-  Terminal.prototype.end = function () {
-    this.offset = this.buffer.length - this.page
-    this.cursor.visible = true
-    this._dirty = true
-  }
-
-  Terminal.prototype.backspace = function () {
-    var o = this.offset
-    if (this.cursor.x > 0) {
-      var i = this.cursor.y * this.width + this.cursor.x - 1
-      // Hack which assumes a '>' in the first column is a prompt.
-      if (!(this.cursor.x === 1 && this.buffer[i + o] === '>')) {
-        this.buffer[i + o] = ' '
-        this.attrs[i + o] = 0
-        this.cursor.x--
-      }
-    }
-  }
-
-  Terminal.prototype._update = function () {
-    if (!this._dirty) return
-    var o = this.offset
-    for (var i = 0, len = this.page; i < len; i++) {
-      var j = i * 6
-      var c = this.buffer[i + o].charCodeAt(0)
-      var a = this.attrs[i + o]
-      var y = Math.floor(i / this.width)
-      var x = i - y * this.width
-      if (this.cursor.visible && this.cursor.x === x && this.cursor.y === y)
-        a |= ATTR_CURSOR
-      this._charBuffer[j + 0] = c
-      this._charBuffer[j + 1] = a
-      this._charBuffer[j + 2] = c
-      this._charBuffer[j + 3] = a
-      this._charBuffer[j + 4] = c
-      this._charBuffer[j + 5] = a
-      this._geoBuffer[j + 0] = i
-      this._geoBuffer[j + 1] = 0
-      this._geoBuffer[j + 2] = i
-      this._geoBuffer[j + 3] = 1
-      this._geoBuffer[j + 4] = i
-      this._geoBuffer[j + 5] = 2
-    }
-  }
-
-  Terminal.prototype.getCharBuffer = function () {
-    this._update()
-    return this._charBuffer
-  }
-
-  Terminal.prototype.getGeoBuffer = function () {
-    this._update()
-    return this._geoBuffer
-  }
-
-  Terminal.prototype.toString = function () {
-    var out = new Array(this.page)
-    var i
-    var len
-    for (i = 0, len = this.page; i < len; i++) {
-      out[i] =
-        this.buffer[i + o] + (i !== 0 && i % this.width === 0 ? '\n' : '')
-    }
-    return out.join('')
-  }
-
-  return Terminal
-})()
-
 var term = new Terminal()
 term.addString(
-  '     __ _____________  __  ___                 \n' +
-    '    / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ \n' +
-    '   / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3\n' +
-    '  /____/_/ /___/_/|_/_/  /_/   617-555-1337    \n' +
-    '                                               \n' +
-    'Username: ian                                  \n' +
-    'Password: **********                           \n'
+  `     __ _____________  __  ___                 
+        / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
+       / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
+      /____/_/ /___/_/|_/_/  /_/   617-555-1337    
+                                                   
+    Username: ian                                  
+    Password: **********                          
+  `
 )
 
 // Uncomment to fill the terminal with #'s for positioning.
 // term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#');
 ;(function () {
-  var ENDPOINT = 'https://game.langworth.com'
+  // const ENDPOINT = 'https://game.langworth.com'
+  const ENDPOINT = 'https://localhost:5000'
 
   function update() {
     if (!gl) return
@@ -201,8 +26,8 @@ term.addString(
 
   if (document.location.search.substr(1) === 'new') sessionStorage.clear()
 
-  var sessionID = sessionStorage.getItem('sessionID')
-  var inputBuffer = ''
+  const sessionID = sessionStorage.getItem('sessionID')
+  let inputBuffer = ''
 
   if (!sessionID) {
     term.addString('logging in.....')
@@ -213,12 +38,13 @@ term.addString(
   }
 
   function jsonXHR(url, body, cb) {
-    var req = new XMLHttpRequest()
+    const req = new XMLHttpRequest()
     req.open(body ? 'POST' : 'GET', url, true)
     if (body) req.setRequestHeader('content-type', 'application/json')
     req.onload = function () {
+      let obj
       try {
-        var obj = JSON.parse(req.responseText)
+        obj = JSON.parse(req.responseText)
       } catch (e) {
         return cb(req.statusText)
       }
@@ -236,7 +62,7 @@ term.addString(
   }
 
   function createSession() {
-    var timer = setInterval(function () {
+    const timer = setInterval(function () {
       term.addChar('.')
       update()
     }, 250)
@@ -281,7 +107,7 @@ term.addString(
     if (e.keyCode === 13) {
       // Enter key
       term.addChar('\n')
-      var message = inputBuffer
+      const message = inputBuffer
       inputBuffer = ''
       sendCommand(message)
     } else if (e.keyCode === 8) {
@@ -316,26 +142,8 @@ term.addString(
   window.focus()
 })()
 
-/**
- * Provides requestAnimationFrame in a cross browser way.
- * paulirish.com/2011/requestanimationframe-for-smart-animating/
- */
-window.requestAnimationFrame =
-  window.requestAnimationFrame ||
-  (function () {
-    return (
-      window.webkitRequestAnimationFrame ||
-      window.mozRequestAnimationFrame ||
-      window.oRequestAnimationFrame ||
-      window.msRequestAnimationFrame ||
-      function (callback, element) {
-        window.setTimeout(callback, 1000 / 60)
-      }
-    )
-  })()
-
 // A giant pile of global variables that I'm too lazy to refactor. Sorry.
-var canvas,
+let canvas,
   gl,
   bgImageTex,
   bgImageTexLocation,
@@ -385,12 +193,12 @@ var canvas,
   }
 
 // We only have a few things to load, so start everything up after they're done loading.
-var fontImage = new Image()
+const fontImage = new Image()
 fontImage.src = 'apple2font.png'
-var bgImage = new Image()
+const bgImage = new Image()
 bgImage.src = 'term.jpg'
-var barrier = 0
-bgImage.onload = fontImage.onload = function () {
+const barrier = 0
+bgImage.onload = fontImage.onload = () => {
   barrier++
   if (barrier === 2) {
     init()
@@ -399,10 +207,10 @@ bgImage.onload = fontImage.onload = function () {
   }
 }
 
-function init() {
+const init = () => {
   window.onresize = resize
 
-  var UNIT_QUAD_GEO = new Float32Array([
+  const UNIT_QUAD_GEO = new Float32Array([
     1.0,
     1.0,
     0.0,
@@ -416,11 +224,11 @@ function init() {
     -1.0,
     0.0,
   ])
-  var UNIT_QUAT_COORDS = new Float32Array([1, 1, 0, 1, 1, 0, 0, 0])
+  const UNIT_QUAT_COORDS = new Float32Array([1, 1, 0, 1, 1, 0, 0, 0])
 
-  var vs, fs
+  let vs, fs
   canvas = document.querySelector('canvas')
-  var content = document.querySelector('#content')
+  const content = document.querySelector('#content')
 
   try {
     gl = canvas.getContext('experimental-webgl', { alpha: false })
@@ -521,7 +329,7 @@ function init() {
   // Post-process geometry buffer
   postPositionBuffer = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, postPositionBuffer)
-  var geo = new Float32Array([
+  const geo = new Float32Array([
     0.94,
     0.66,
     1, // TR
@@ -634,10 +442,10 @@ function init() {
 }
 
 function createProgram(vertex, fragment) {
-  var program = gl.createProgram()
-  var preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n'
-  var vs = createShader(preamble + vertex, gl.VERTEX_SHADER)
-  var fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER)
+  const program = gl.createProgram()
+  const preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n'
+  const vs = createShader(preamble + vertex, gl.VERTEX_SHADER)
+  const fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER)
 
   if (vs == null || fs == null)
     throw new Error('Either vertex or fragment shader is null')
@@ -671,7 +479,7 @@ function createProgram(vertex, fragment) {
 }
 
 function createShader(src, type) {
-  var shader = gl.createShader(type)
+  const shader = gl.createShader(type)
   gl.shaderSource(shader, src)
   gl.compileShader(shader)
 
@@ -697,9 +505,9 @@ function resize() {
 }
 
 // Limit FPS to 15 to avoid melting GPUs.
-var lastFrame = 0
+let lastFrame = 0
 function animate() {
-  var now = Date.now()
+  const now = Date.now()
   if (now - 1000 / 15 > lastFrame) {
     lastFrame = now
     render()
@@ -707,7 +515,7 @@ function animate() {
   requestAnimationFrame(animate)
 }
 
-function render() {
+const render = () => {
   if (!termProgram) return
 
   // Draw the terminal
