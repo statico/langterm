@@ -1,13 +1,13 @@
 ;(async () => {
   var term = new Terminal()
   term.addString(
-    `     __ _____________  __  ___                 
-        / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
-       / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
-      /____/_/ /___/_/|_/_/  /_/   617-555-1337    
+    `       __ _____________  __  ___                 
+      / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
+     / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
+    /____/_/ /___/_/|_/_/  /_/   617-555-1337    
                                                    
-    Username: ian                                  
-    Password: **********                          
+  Username: ian                                  
+  Password: **********                          
   `
   )
 
@@ -30,7 +30,7 @@
 
   if (document.location.search.substr(1) === 'new') sessionStorage.clear()
 
-  const sessionID = sessionStorage.getItem('sessionID')
+  let sessionID = sessionStorage.getItem('sessionID')
   let inputBuffer = ''
 
   if (!sessionID) {
@@ -48,6 +48,7 @@
     }, 250)
 
     try {
+      const res = await fetch(ENDPOINT + '/new', { method: 'POST' })
       const data = await res.json()
       clearTimeout(timer)
       sessionID = data.session
@@ -56,6 +57,7 @@
       term.addString(data.output, true)
       update()
     } catch (err) {
+      console.error(err)
       term.addString('?ERROR? ' + err + '\n', true)
     }
   }
@@ -187,10 +189,6 @@
     termFrag: 'shaders/term.frag',
     termVert: 'shaders/term.vert',
   })
-
-  init()
-  resize()
-  animate()
 
   function init() {
     window.onresize = resize
@@ -644,4 +642,8 @@
     gl.disableVertexAttribArray(compPositionLocation)
     gl.disableVertexAttribArray(compTexCoordLocation)
   }
+
+  init()
+  resize()
+  animate()
 })()

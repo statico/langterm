@@ -10,7 +10,7 @@ body {
 }
 
 body {
-  background: #5c3e34 url(../assets/term.jpg) no-repeat center center fixed;
+  background: #000 url(../assets/term.jpg) no-repeat center center fixed;
   background-size: cover;
   display: flex;
   font-size: 20px;
