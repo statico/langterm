@@ -10,3 +10,7 @@ build
 data.json
 node_modules
 npm-debug.log
+
+pubkey.asc
+robots.txt
+keybase.txt
