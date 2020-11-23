@@ -1,136 +1,9 @@
-;(async () => {
-  var term = new Terminal()
-  term.addString(
-    `       __ _____________  __  ___                 
-      / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
-     / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
-    /____/_/ /___/_/|_/_/  /_/   617-555-1337    
-                                                   
-  Username: ian                                  
-  Password: **********                          
-  `
-  )
+const desktopView = (() => {
+  let term, canvas, gl, inputBuffer, assets
 
-  // Uncomment to fill the terminal with #'s for positioning.
-  // term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#');
-
-  // Expect statico/glulxe-httpd to be running when testing on localhost.
-  const ENDPOINT =
-    document.location.hostname === 'localhost'
-      ? 'http://localhost:5000'
-      : 'https://game.langworth.com'
-
-  function update() {
-    if (!gl) return
-    gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
-    gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW)
-  }
-
-  if (document.location.search.substr(1) === 'new') sessionStorage.clear()
-
-  let sessionID = sessionStorage.getItem('sessionID')
-  let inputBuffer = ''
-
-  if (!sessionID) {
-    term.addString('logging in.....')
-    createSession()
-  } else {
-    term.addString('restoring session.....\n')
-    sendCommand('look')
-  }
-
-  async function createSession() {
-    const timer = setInterval(function () {
-      term.addChar('.')
-      update()
-    }, 250)
-
-    try {
-      const res = await fetch(ENDPOINT + '/new', { method: 'POST' })
-      const data = await res.json()
-      clearTimeout(timer)
-      sessionID = data.session
-      sessionStorage.setItem('sessionID', sessionID)
-      term.addString('\n\n')
-      term.addString(data.output, true)
-      update()
-    } catch (err) {
-      console.error(err)
-      term.addString('?ERROR? ' + err + '\n', true)
-    }
-  }
-
-  async function sendCommand(message) {
-    try {
-      const res = await fetch(ENDPOINT + '/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session: sessionID, message: message }),
-      })
-      const data = await res.json()
-
-      var match = String(data.output).match(/OPENURL:(\S+)/)
-      if (match) {
-        document.location.href = match[1]
-      } else {
-        term.addChar('\n')
-        term.addString(data.output, true)
-        update()
-      }
-    } catch (err) {
-      if (/No such session/.test(err)) {
-        createSession()
-      } else {
-        term.addString('?ERROR? ' + err + '\n', true)
-      }
-      update()
-    }
-  }
-
-  window.addEventListener('keydown', function (e) {
-    if (e.keyCode === 13) {
-      // Enter key
-      term.addChar('\n')
-      const message = inputBuffer
-      inputBuffer = ''
-      sendCommand(message)
-    } else if (e.keyCode === 8) {
-      // Backspace
-      e.preventDefault() // Otherwise Backspace navigates back on Firefox.
-      term.backspace()
-      inputBuffer = inputBuffer.slice(0, -1)
-    } else if (e.keyCode === 33) {
-      // Page Up
-      e.preventDefault()
-      term.pageUp()
-    } else if (e.keyCode === 34) {
-      // Page Down
-      e.preventDefault()
-      term.pageDown()
-    } else if (e.keyCode === 35) {
-      // End
-      e.preventDefault()
-      term.end()
-    } else if (e.key.length === 1) {
-      // Modifier keys have long names.
-      if (e.ctrlKey && e.key === 'l') {
-        term.clear()
-        term.addChar('>')
-      } else {
-        term.addChar(e.key)
-        inputBuffer += e.key
-      }
-    } else return
-    update()
-  })
-  window.focus()
-
-  // A giant pile of global variables that I'm too lazy to refactor. Sorry.
-  let canvas,
-    gl,
-    bgImageTex,
+  // A giant pile of global variables that I'm too lazy to refactor. Sorry. GL
+  // is kinda boilerplate-y.
+  let bgImageTex,
     bgImageTexLocation,
     bgPositionBuffer,
     bgPositionLocation,
@@ -173,26 +46,117 @@
       time: 0,
       screenWidth: 0,
       screenHeight: 0,
-      gridWidth: term.width,
-      gridHeight: term.height,
+      gridWidth: 0,
+      gridHeight: 0,
     }
 
-  const assets = await loadAssets({
-    fontImage: 'assets/PrintChar21.png',
-    bgImage: 'assets/term.jpg',
-    bgFrag: 'shaders/bg.frag',
-    bgVert: 'shaders/bg.vert',
-    compositeFrag: 'shaders/composite.frag',
-    compositeVert: 'shaders/composite.vert',
-    postFrag: 'shaders/post.frag',
-    postVert: 'shaders/post.vert',
-    termFrag: 'shaders/term.frag',
-    termVert: 'shaders/term.vert',
-  })
+  const update = () => {
+    gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW)
+  }
 
-  function init() {
-    window.onresize = resize
+  const keydown = async (e) => {
+    if (e.keyCode === 13) {
+      // Enter key
+      term.addChar('\n')
+      const message = inputBuffer
+      inputBuffer = ''
+      term.addString(await api.send(message), true)
+    } else if (e.keyCode === 8) {
+      // Backspace
+      e.preventDefault() // Otherwise Backspace navigates back on Firefox.
+      term.backspace()
+      inputBuffer = inputBuffer.slice(0, -1)
+    } else if (e.keyCode === 33) {
+      // Page Up
+      e.preventDefault()
+      term.pageUp()
+    } else if (e.keyCode === 34) {
+      // Page Down
+      e.preventDefault()
+      term.pageDown()
+    } else if (e.keyCode === 35) {
+      // End
+      e.preventDefault()
+      term.end()
+    } else if (e.key.length === 1) {
+      // Modifier keys have long names.
+      if (e.ctrlKey && e.key === 'l') {
+        term.clear()
+        term.addChar('>')
+      } else {
+        term.addChar(e.key)
+        inputBuffer += e.key
+      }
+    } else return
+    update()
+  }
 
+  const createProgram = (vertex, fragment) => {
+    const program = gl.createProgram()
+    const preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n'
+    const vs = createShader(preamble + vertex, gl.VERTEX_SHADER)
+    const fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER)
+
+    if (vs == null || fs == null)
+      throw new Error('Either vertex or fragment shader is null')
+    gl.attachShader(program, vs)
+    gl.attachShader(program, fs)
+    gl.deleteShader(vs)
+    gl.deleteShader(fs)
+    gl.linkProgram(program)
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      throw new Error(
+        'ERROR:\n' +
+          'VALIDATE_STATUS: ' +
+          gl.getProgramParameter(program, gl.VALIDATE_STATUS) +
+          '\n' +
+          'ERROR: ' +
+          gl.getError() +
+          '\n' +
+          'LOG: ' +
+          gl.getProgramInfoLog(program) +
+          '\n\n' +
+          '- Vertex Shader -\n' +
+          vertex +
+          '\n\n' +
+          '- Fragment Shader -\n' +
+          fragment
+      )
+    }
+
+    return program
+  }
+
+  const createShader = (src, type) => {
+    const shader = gl.createShader(type)
+    gl.shaderSource(shader, src)
+    gl.compileShader(shader)
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      throw new Error(
+        (type === gl.VERTEX_SHADER ? 'VERTEX' : 'FRAGMENT') +
+          ' SHADER:\n' +
+          gl.getShaderInfoLog(shader)
+      )
+    }
+    return shader
+  }
+
+  const resize = () => {
+    var r = window.devicePixelRatio || 1
+    var w = Math.floor(gl.canvas.clientWidth * r)
+    var h = Math.floor(gl.canvas.clientHeight * r)
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = parameters.screenWidth = w
+      canvas.height = parameters.screenHeight = h
+    }
+  }
+
+  const init = () => {
     const UNIT_QUAD_GEO = new Float32Array([
       1.0,
       1.0,
@@ -209,27 +173,12 @@
     ])
     const UNIT_QUAT_COORDS = new Float32Array([1, 1, 0, 1, 1, 0, 0, 0])
 
-    canvas = document.querySelector('canvas')
-    const content = document.querySelector('#content')
-
     try {
       gl = canvas.getContext('experimental-webgl', { alpha: false })
     } catch (error) {}
     if (!gl) {
-      console.error('Cannot create WebGL context.')
-      content.style.display = 'block'
-      canvas.style.display = 'none'
-      return
+      throw new Error('Cannot create WebGL context.')
     }
-
-    if (document.body.clientWidth <= 768) {
-      gl = null
-      content.style.display = 'block'
-      canvas.style.display = 'none'
-      return
-    }
-
-    document.querySelector('#content').style.display = 'none'
 
     gl.disable(gl.DEPTH_TEST)
     gl.enable(gl.BLEND) // Needed for the composition shader.
@@ -429,72 +378,9 @@
     gl.bindBuffer(gl.ARRAY_BUFFER, null)
   }
 
-  function createProgram(vertex, fragment) {
-    const program = gl.createProgram()
-    const preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n'
-    const vs = createShader(preamble + vertex, gl.VERTEX_SHADER)
-    const fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER)
-
-    if (vs == null || fs == null)
-      throw new Error('Either vertex or fragment shader is null')
-    gl.attachShader(program, vs)
-    gl.attachShader(program, fs)
-    gl.deleteShader(vs)
-    gl.deleteShader(fs)
-    gl.linkProgram(program)
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-      throw new Error(
-        'ERROR:\n' +
-          'VALIDATE_STATUS: ' +
-          gl.getProgramParameter(program, gl.VALIDATE_STATUS) +
-          '\n' +
-          'ERROR: ' +
-          gl.getError() +
-          '\n' +
-          'LOG: ' +
-          gl.getProgramInfoLog(program) +
-          '\n\n' +
-          '- Vertex Shader -\n' +
-          vertex +
-          '\n\n' +
-          '- Fragment Shader -\n' +
-          fragment
-      )
-    }
-
-    return program
-  }
-
-  function createShader(src, type) {
-    const shader = gl.createShader(type)
-    gl.shaderSource(shader, src)
-    gl.compileShader(shader)
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      throw new Error(
-        (type === gl.VERTEX_SHADER ? 'VERTEX' : 'FRAGMENT') +
-          ' SHADER:\n' +
-          gl.getShaderInfoLog(shader)
-      )
-    }
-    return shader
-  }
-
-  function resize() {
-    if (!gl) return
-    var r = window.devicePixelRatio || 1
-    var w = Math.floor(gl.canvas.clientWidth * r)
-    var h = Math.floor(gl.canvas.clientHeight * r)
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = parameters.screenWidth = w
-      canvas.height = parameters.screenHeight = h
-    }
-  }
-
   // Limit FPS to 15 to avoid melting GPUs.
   let lastFrame = 0
-  function animate() {
+  const animate = () => {
     const now = Date.now()
     if (now - 1000 / 15 > lastFrame) {
       lastFrame = now
@@ -503,7 +389,7 @@
     requestAnimationFrame(animate)
   }
 
-  function render() {
+  const render = () => {
     if (!termProgram) return
 
     // Draw the terminal
@@ -643,7 +529,61 @@
     gl.disableVertexAttribArray(compTexCoordLocation)
   }
 
-  init()
-  resize()
-  animate()
+  const setup = async () => {
+    document.body.className = 'desktop'
+
+    document.body.innerHTML = '<canvas></canvas>'
+    canvas = document.querySelector('canvas')
+
+    assets = await loadAssets({
+      fontImage: 'fonts/PrintChar21.png',
+      bgImage: 'assets/term.jpg',
+      bgFrag: 'shaders/bg.frag',
+      bgVert: 'shaders/bg.vert',
+      compositeFrag: 'shaders/composite.frag',
+      compositeVert: 'shaders/composite.vert',
+      postFrag: 'shaders/post.frag',
+      postVert: 'shaders/post.vert',
+      termFrag: 'shaders/term.frag',
+      termVert: 'shaders/term.vert',
+    })
+
+    term = new Terminal()
+    term.addString(
+      `       __ _____________  __  ___                 
+      / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
+     / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
+    /____/_/ /___/_/|_/_/  /_/   617-555-1337    
+                                                   
+  Username: ian                                  
+  Password: **********\n\n`
+    )
+
+    // Uncomment to fill the terminal with #'s for positioning.
+    // term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#');
+
+    parameters.gridWidth = term.width
+    parameters.gridHeight = term.height
+
+    window.addEventListener('resize', resize)
+    window.addEventListener('keydown', keydown)
+    window.focus()
+
+    try {
+      term.addString(await api.setup())
+    } catch (err) {
+      term.addString('?ERROR? ' + err + '\n\nPlease tell Ian.')
+    }
+
+    init()
+    resize()
+    animate()
+  }
+
+  const teardown = () => {
+    window.removeEventListener('keydown', keydown)
+    window.removeEventListener('resize', resize)
+  }
+
+  return { setup, teardown }
 })()
