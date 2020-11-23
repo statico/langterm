@@ -1,5 +1,7 @@
+//
+// An easy interface to the game's REST API.
+//
 const api = (() => {
-  // Expect statico/glulxe-httpd to be running when testing on localhost.
   const ENDPOINT = /langworth\.com/.test(document.location.hostname)
     ? 'https://game.langworth.com'
     : `http://${document.location.hostname}:5000`
@@ -7,6 +9,7 @@ const api = (() => {
   let sessionID
 
   const createSession = async () => {
+    // See statico/glulxe-httpd for what this connects to.
     const res = await fetch(ENDPOINT + '/new', { method: 'POST' })
     const data = await res.json()
     sessionID = data.session
@@ -14,6 +17,7 @@ const api = (() => {
     return data.output
   }
 
+  // Send a message.
   const send = async (message) => {
     try {
       const res = await fetch(ENDPOINT + '/send', {
@@ -23,6 +27,7 @@ const api = (() => {
       })
       const data = await res.json()
 
+      // If a response has `OPENURL:`, open that URL.
       var match = String(data.output).match(/OPENURL:(\S+)/)
       if (match) {
         document.location.href = match[1]
@@ -30,6 +35,7 @@ const api = (() => {
         return data.output
       }
     } catch (err) {
+      // Sessions may have expired, or the user might have quit.
       if (/No such session/.test(err)) {
         return start()
       } else {
@@ -38,10 +44,13 @@ const api = (() => {
     }
   }
 
+  // Initialize the API and get an introductory message.
   const setup = async () => {
-    // Use `?new` to force a new session.
+    // Debugging: Use `?new` to force a new session.
     if (document.location.search.substr(1) === 'new') sessionStorage.clear()
 
+    // If there's already a session, execute 'look'. Otherwise, create a
+    // session.
     sessionID = sessionStorage.getItem('sessionID')
     if (sessionID) {
       return await send('look')

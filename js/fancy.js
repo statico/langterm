@@ -1,3 +1,6 @@
+//
+// The fancy fake-CRT interface for desktop, non-touch users.
+//
 const fancyView = (() => {
   // Limit FPS to avoid melting GPUs.
   const FPS = 15
@@ -8,8 +11,8 @@ const fancyView = (() => {
     term,
     inputBuffer = ''
 
-  // A giant pile of global variables that I'm too lazy to refactor. Sorry. GL
-  // is kinda boilerplate-y.
+  // A giant pile of global variables that I'm too lazy to refactor. Sorry.
+  // GL is kinda boilerplate-y.
   let bgImageTex,
     bgImageTexLocation,
     bgPositionBuffer,
@@ -57,6 +60,7 @@ const fancyView = (() => {
       gridHeight: 0,
     }
 
+  // Given a string, add it to the terminal.
   const renderOutput = (output) => {
     // If there's a header, make it inverted.
     const re = /^([A-Z ]+)(\n+)/s
@@ -69,6 +73,7 @@ const fancyView = (() => {
     update()
   }
 
+  // Handle key events.
   const keydown = async (e) => {
     if (e.keyCode === 13) {
       // Enter key
@@ -106,6 +111,7 @@ const fancyView = (() => {
     update()
   }
 
+  // Update the WebGL buffers with our terminal's display buffer.
   const update = () => {
     gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
@@ -113,6 +119,7 @@ const fancyView = (() => {
     gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW)
   }
 
+  // Create a WebGL program given an vertex and fragment shader pair.
   const createProgram = (vertex, fragment) => {
     const program = gl.createProgram()
     const preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n'
@@ -129,27 +136,23 @@ const fancyView = (() => {
 
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       throw new Error(
-        'ERROR:\n' +
-          'VALIDATE_STATUS: ' +
-          gl.getProgramParameter(program, gl.VALIDATE_STATUS) +
-          '\n' +
-          'ERROR: ' +
-          gl.getError() +
-          '\n' +
-          'LOG: ' +
-          gl.getProgramInfoLog(program) +
-          '\n\n' +
-          '- Vertex Shader -\n' +
-          vertex +
-          '\n\n' +
-          '- Fragment Shader -\n' +
-          fragment
+        `ERROR:
+VALIDATE_STATUS: ${gl.getProgramParameter(program, gl.VALIDATE_STATUS)}
+ERROR: ${gl.getError()}
+LOG: ${gl.getProgramInfoLog(program)}
+
+- Vertex Shader -
+${vertex}
+
+- Fragment Shader -
+${fragment}`
       )
     }
 
     return program
   }
 
+  // Compile a shader.
   const createShader = (src, type) => {
     const shader = gl.createShader(type)
     gl.shaderSource(shader, src)
@@ -165,6 +168,7 @@ const fancyView = (() => {
     return shader
   }
 
+  // Initialize everything.
   const initWebGL = () => {
     const UNIT_QUAD_GEO = new Float32Array([
       1.0,
@@ -387,10 +391,11 @@ const fancyView = (() => {
     gl.bindBuffer(gl.ARRAY_BUFFER, null)
   }
 
+  // Draw everything to the screen.
   const render = () => {
-    if (!termProgram) return
+    if (!termProgram) return // In case we're early.
 
-    // Draw the terminal
+    // Render the terminal
 
     parameters.time = Date.now() - parameters.startTime
 
@@ -463,7 +468,7 @@ const fancyView = (() => {
     gl.disableVertexAttribArray(postPositionLocation)
     gl.disableVertexAttribArray(postTexCoordLocation)
 
-    // Draw the background
+    // Render the background
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -527,6 +532,7 @@ const fancyView = (() => {
     gl.disableVertexAttribArray(compTexCoordLocation)
   }
 
+  // Handle browser resize events.
   const resize = () => {
     // This requires the canvas to be set at 100% width and height in CSS,
     // otherwise really weird stuff happens while resizing.
@@ -539,6 +545,7 @@ const fancyView = (() => {
     }
   }
 
+  // Set up fancy mode.
   const setup = async () => {
     document.body.className = 'fancy'
 
@@ -560,12 +567,12 @@ const fancyView = (() => {
 
     term = new Terminal()
     term.addString(
-      `   __ _____________  __  ___                 
-  / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
- / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
-/____/_/ /___/_/|_/_/  /_/   617-555-1337    
-                                                   
-Username: ian                                  
+      `   __ _____________  __  ___
+  / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][
+ / /__/ / / _// , _/ /|_/ /  ver 2020.11.23.1
+/____/_/ /___/_/|_/_/  /_/   617-555-1337
+
+Username: ian
 Password: **********\n\n`
     )
 
@@ -603,10 +610,12 @@ Password: **********\n\n`
     }
   }
 
+  // Get rid of everything.
   const teardown = () => {
     window.removeEventListener('keydown', keydown)
     window.removeEventListener('resize', resize)
     gl = null // Stops animation.
+    document.body.innerHTML = ''
   }
 
   return { setup, teardown }

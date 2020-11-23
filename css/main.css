@@ -26,6 +26,7 @@ body {
 
 body,
 p,
+pre,
 h1,
 ul,
 li,
@@ -34,7 +35,7 @@ button {
   font-family: 'PrintChar21', ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.2;
 }
 
@@ -51,10 +52,10 @@ a:active {
 
 h1,
 p,
+pre,
 li {
   margin-bottom: 1rem;
 }
-
 h1 {
   display: inline-block;
   background: var(--fg);
@@ -64,7 +65,6 @@ h1 {
 ul {
   list-style-type: none;
 }
-
 li:before {
   content: '* ';
 }
@@ -84,6 +84,7 @@ body.simple {
 body.simple main {
   flex: 1;
   padding: 1rem;
+  overflow-x: hidden;
   overflow-y: scroll;
 }
 body.simple main .heading {
