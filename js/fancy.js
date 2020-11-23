@@ -1,4 +1,4 @@
-const desktopView = (() => {
+const fancyView = (() => {
   let term, canvas, gl, inputBuffer, assets
 
   // A giant pile of global variables that I'm too lazy to refactor. Sorry. GL
@@ -530,7 +530,7 @@ const desktopView = (() => {
   }
 
   const setup = async () => {
-    document.body.className = 'desktop'
+    document.body.className = 'fancy'
 
     document.body.innerHTML = '<canvas></canvas>'
     canvas = document.querySelector('canvas')

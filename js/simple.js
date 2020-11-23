@@ -1,4 +1,4 @@
-const mobileView = (() => {
+const simpleView = (() => {
   const $ = document.body.querySelector.bind(document.body)
 
   const renderOutput = (output) => {
@@ -21,7 +21,7 @@ const mobileView = (() => {
   }
 
   const setup = async () => {
-    document.body.className = 'mobile'
+    document.body.className = 'simple'
     document.body.innerHTML = `
       <main></main>
       <form>
