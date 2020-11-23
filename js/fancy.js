@@ -1,5 +1,12 @@
 const fancyView = (() => {
-  let term, canvas, gl, inputBuffer, assets
+  // Limit FPS to avoid melting GPUs.
+  const FPS = 15
+
+  let assets,
+    canvas,
+    gl,
+    term,
+    inputBuffer = ''
 
   // A giant pile of global variables that I'm too lazy to refactor. Sorry. GL
   // is kinda boilerplate-y.
@@ -50,20 +57,25 @@ const fancyView = (() => {
       gridHeight: 0,
     }
 
-  const update = () => {
-    gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
-    gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer)
-    gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW)
+  const renderOutput = (output) => {
+    // If there's a header, make it inverted.
+    const re = /^([A-Z ]+)(\n+)/s
+    const match = output.match(re)
+    if (match) {
+      term.addString(match[1], true, Terminal.ATTR_INVERSE)
+      term.addChar('\n')
+    }
+    term.addString(output.replace(re, ''), true)
+    update()
   }
 
   const keydown = async (e) => {
     if (e.keyCode === 13) {
       // Enter key
-      term.addChar('\n')
+      term.addString('\n\n')
       const message = inputBuffer
       inputBuffer = ''
-      term.addString(await api.send(message), true)
+      renderOutput(await api.send(message))
     } else if (e.keyCode === 8) {
       // Backspace
       e.preventDefault() // Otherwise Backspace navigates back on Firefox.
@@ -92,6 +104,13 @@ const fancyView = (() => {
       }
     } else return
     update()
+  }
+
+  const update = () => {
+    gl.bindBuffer(gl.ARRAY_BUFFER, termGeoBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, term.getGeoBuffer(), gl.STATIC_DRAW)
+    gl.bindBuffer(gl.ARRAY_BUFFER, termCharBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, term.getCharBuffer(), gl.STATIC_DRAW)
   }
 
   const createProgram = (vertex, fragment) => {
@@ -146,17 +165,7 @@ const fancyView = (() => {
     return shader
   }
 
-  const resize = () => {
-    var r = window.devicePixelRatio || 1
-    var w = Math.floor(gl.canvas.clientWidth * r)
-    var h = Math.floor(gl.canvas.clientHeight * r)
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = parameters.screenWidth = w
-      canvas.height = parameters.screenHeight = h
-    }
-  }
-
-  const init = () => {
+  const initWebGL = () => {
     const UNIT_QUAD_GEO = new Float32Array([
       1.0,
       1.0,
@@ -378,17 +387,6 @@ const fancyView = (() => {
     gl.bindBuffer(gl.ARRAY_BUFFER, null)
   }
 
-  // Limit FPS to 15 to avoid melting GPUs.
-  let lastFrame = 0
-  const animate = () => {
-    const now = Date.now()
-    if (now - 1000 / 15 > lastFrame) {
-      lastFrame = now
-      render()
-    }
-    requestAnimationFrame(animate)
-  }
-
   const render = () => {
     if (!termProgram) return
 
@@ -529,6 +527,18 @@ const fancyView = (() => {
     gl.disableVertexAttribArray(compTexCoordLocation)
   }
 
+  const resize = () => {
+    // This requires the canvas to be set at 100% width and height in CSS,
+    // otherwise really weird stuff happens while resizing.
+    var r = window.devicePixelRatio || 1
+    var w = Math.floor(gl.canvas.clientWidth * r)
+    var h = Math.floor(gl.canvas.clientHeight * r)
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = parameters.screenWidth = w
+      canvas.height = parameters.screenHeight = h
+    }
+  }
+
   const setup = async () => {
     document.body.className = 'fancy'
 
@@ -550,39 +560,53 @@ const fancyView = (() => {
 
     term = new Terminal()
     term.addString(
-      `       __ _____________  __  ___                 
-      / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
-     / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
-    /____/_/ /___/_/|_/_/  /_/   617-555-1337    
+      `   __ _____________  __  ___                 
+  / //_  __/ __/ _ \\/  |/  / 28.8 kbit/s ][ 
+ / /__/ / / _// , _/ /|_/ /  ver 2020.02.16.3
+/____/_/ /___/_/|_/_/  /_/   617-555-1337    
                                                    
-  Username: ian                                  
-  Password: **********\n\n`
+Username: ian                                  
+Password: **********\n\n`
     )
 
     // Uncomment to fill the terminal with #'s for positioning.
-    // term.clear(); for (var i = 0; i < term.width * term.height - 1; i++) term.addChar('#');
+    // term.fill('#')
 
     parameters.gridWidth = term.width
     parameters.gridHeight = term.height
+
+    let lastFrame = 0
+    const animate = () => {
+      if (!gl) return
+      const now = Date.now()
+      if (now - 1000 / FPS > lastFrame) {
+        lastFrame = now
+        render()
+      }
+      requestAnimationFrame(animate)
+    }
+
+    initWebGL()
+    resize()
+    animate()
 
     window.addEventListener('resize', resize)
     window.addEventListener('keydown', keydown)
     window.focus()
 
     try {
-      term.addString(await api.setup())
+      renderOutput(await api.setup())
     } catch (err) {
-      term.addString('?ERROR? ' + err + '\n\nPlease tell Ian.')
+      const ua = navigator.userAgent
+      term.addString(`?ERROR? ${err}\n\nPlease tell Ian.\n\n${ua}`)
+      console.error(err)
     }
-
-    init()
-    resize()
-    animate()
   }
 
   const teardown = () => {
     window.removeEventListener('keydown', keydown)
     window.removeEventListener('resize', resize)
+    gl = null // Stops animation.
   }
 
   return { setup, teardown }

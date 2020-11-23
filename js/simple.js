@@ -52,7 +52,9 @@ const simpleView = (() => {
     try {
       renderOutput(await api.setup())
     } catch (err) {
-      renderOutput('?ERROR? ' + err + '\n\nPlease tell Ian.')
+      const ua = navigator.userAgent
+      renderOutput(`?ERROR? ${err}\n\nPlease tell Ian.\n\n${ua}`)
+      console.error(err)
     }
   }
 

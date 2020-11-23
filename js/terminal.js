@@ -1,11 +1,8 @@
-const ATTR_CURSOR = 1
-const ATTR_INVERSE = 2
-const ATTR_BLINK = 4
-
-const INVERSE_ON = '\u200f'
-const INVERSE_OFF = '\u200e'
-
 class Terminal {
+  static ATTR_CURSOR = 1
+  static ATTR_INVERSE = 2
+  static ATTR_BLINK = 4
+
   constructor() {
     this.width = 60
     this.height = 24
@@ -35,7 +32,14 @@ class Terminal {
     this._dirty = true
   }
 
-  addString(str, wrap) {
+  fill(char) {
+    this.clear()
+    for (var i = 0; i < this.width * this.height - 1; i++) {
+      this.addChar(char)
+    }
+  }
+
+  addString(str, wrap, attrs = 0) {
     this.end()
     if (!str.length) return
     if (wrap) {
@@ -44,19 +48,8 @@ class Terminal {
         .match(RegExp('.{1,' + (this.width - 2) + '}(\\s|$)', 'g'))
         .join('\n')
     }
-    let attrs = 0
     for (var i = 0; i < str.length; i++) {
-      const c = str.charAt(i)
-      switch (c) {
-        case INVERSE_ON:
-          attrs |= ATTR_INVERSE
-          break
-        case INVERSE_OFF:
-          attrs &= ~ATTR_INVERSE
-          break
-        default:
-          this.addChar(c, attrs)
-      }
+      this.addChar(str.charAt(i), attrs)
     }
   }
 
@@ -134,7 +127,7 @@ class Terminal {
       const y = Math.floor(i / this.width)
       const x = i - y * this.width
       if (this.cursor.visible && this.cursor.x === x && this.cursor.y === y)
-        a |= ATTR_CURSOR
+        a |= Terminal.ATTR_CURSOR
       this._charBuffer[j + 0] = c
       this._charBuffer[j + 1] = a
       this._charBuffer[j + 2] = c
