@@ -27,19 +27,19 @@ This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL
 
 1. Text input gets added to a buffer. When you hit Enter, the input buffer is sent to an interactive fiction server running a custom story made with Inform7. See [my gluluxe-httpd project](https://github.com/statico/glulxe-httpd) for the server. The story is closed source, but you can check out a limited public version [here](https://github.com/statico/the-archive-public). The whole idea is that you'll have to figure it out on your own ;)
 
-I started with WebGL Boilerplate (github.com/paulirish/webgl-boilerplate). For more involved projects and to reduce repetition, I would consider using ThreeJS.
+I started with [WebGL Boilerplate](https://github.com/paulirish/webgl-boilerplate). For more involved projects and to reduce repetition, I would consider using ThreeJS.
 
 ## Build/Test
 
 1. [Get a Glulx game](https://github.com/statico/glulxe-httpd#get-started) and run [statico/glulxe-httpd](https://github.com/statico/glulxe-httpd)
 2. Serve this directory with something like `python -m SimpleHTTPServer` and go to http://localhost:8000
 
-## Credits
+## See Also
 
-- [Apple II font](http://www.kreativekorp.com/software/fonts/apple2.shtml) from KreativeKorp
+- [Apple II font](http://www.kreativekorp.com/software/fonts/apple2.shtml) from KreativeKorp (used with permission)
 - [Codehead’s Bitmap Font Generator](http://www.codehead.co.uk/cbfg/)
 - [CRT styled scanline shader](https://www.shadertoy.com/view/XsjSzR) by Timothy Lottes
 - [Original VT520 photo](https://goo.gl/AHU79T) by Ratko Grbic (modified by me to remove text)
 - [Inform7](http://inform7.com/) was used to create the story
-- [ifhttp](https://github.com/statico/ifhttp) runs the story
+- [glulxe-httpd](https://github.com/statico/glulxe-httpd) runs the story
 - [WebGL Boilerplate](https://github.com/paulirish/webgl-boilerplate)

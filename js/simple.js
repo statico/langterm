@@ -58,7 +58,9 @@ const simpleView = (() => {
     }
   }
 
-  const teardown = () => {}
+  const teardown = () => {
+    document.body.innerHTML = ''
+  }
 
   return { setup, teardown }
 })()

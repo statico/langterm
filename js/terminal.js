@@ -1,8 +1,4 @@
 class Terminal {
-  static ATTR_CURSOR = 1
-  static ATTR_INVERSE = 2
-  static ATTR_BLINK = 4
-
   constructor() {
     this.width = 60
     this.height = 24
@@ -162,3 +158,7 @@ class Terminal {
     return out.join('')
   }
 }
+
+Terminal.ATTR_CURSOR = 1
+Terminal.ATTR_INVERSE = 2
+Terminal.ATTR_BLINK = 4

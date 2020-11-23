@@ -583,7 +583,7 @@ Password: **********\n\n`
         lastFrame = now
         render()
       }
-      requestAnimationFrame(animate)
+      window.requestAnimationFrame(animate)
     }
 
     initWebGL()

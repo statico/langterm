@@ -1,9 +1,8 @@
 const api = (() => {
   // Expect statico/glulxe-httpd to be running when testing on localhost.
-  const ENDPOINT =
-    document.location.hostname === 'localhost'
-      ? 'http://localhost:5000'
-      : 'https://game.langworth.com'
+  const ENDPOINT = /langworth\.com/.test(document.location.hostname)
+    ? 'https://game.langworth.com'
+    : `http://${document.location.hostname}:5000`
 
   let sessionID
 
