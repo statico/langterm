@@ -1,3 +1,8 @@
+:root {
+  --bg: #3b251e;
+  --fg: #e06b0b;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,34 +14,85 @@ body {
   height: 100%;
 }
 
-body {
+/* body {
   background: #000 url(../assets/term.jpg) no-repeat center center fixed;
   background-size: cover;
   display: flex;
-  font-size: 20px;
   font-family: 'Press Start 2P', monospace;
   text-transform: uppercase;
   font-weight: 100;
   line-height: 1.4;
   align-items: center;
   justify-content: center;
+} */
+body,
+input,
+button {
+  font-family: monospace;
+  font-size: 18px;
 }
 
 body,
 a {
-  color: #e06b0b;
+  color: var(--fg);
 }
 a:hover {
   text-decoration: none;
 }
-#content {
-  display: none; /* Overridden by JavaScript */
+
+/* body.noscript .content {
+  display: none;
   width: 50%;
   margin-bottom: 5%;
   text-align: center;
   padding: 2%;
+} */
+
+body.mobile {
+  background-image: url(../assets/screen-only.jpg);
+  box-shadow: 0px 0px 20rem 5rem rgba(0, 0, 0, 0.4) inset;
+  display: flex;
+  flex-direction: column;
 }
-h1 {
+body.mobile main {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: scroll;
+}
+body.mobile main .heading {
+  display: inline-block;
+  background: var(--fg);
+  color: var(--bg);
+  font-style: normal;
+}
+body.mobile main .input {
+  font-weight: bold;
+}
+body.mobile form {
+  display: flex;
+  flex-direction: row;
+  padding: 0 1rem 1rem;
+}
+body.mobile input {
+  min-width: 0;
+  background: transparent;
+  border: 2px solid var(--fg);
+  color: var(--fg);
+  border-radius: 0;
+  padding: 1rem;
+  flex: 1;
+}
+body.mobile input:focus {
+  outline: none;
+}
+body.mobile button {
+  background: var(--fg);
+  color: var(--bg);
+  border: none;
+  padding: 0.66rem 1.33rem;
+}
+
+/* h1 {
   margin-bottom: 20px;
   font-size: 50px;
   font-weight: 100;
@@ -75,4 +131,4 @@ li {
   li {
     margin-bottom: 10px;
   }
-}
+} */
