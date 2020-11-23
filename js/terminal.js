@@ -121,6 +121,15 @@ class Terminal {
     }
   }
 
+  clearToStartOfLine() {
+    var o = this.offset
+    for (let i = 0; i < this.cursor.x; i++) {
+      this.buffer[i + o] = ' '
+      this.attrs[i + o] = 0
+    }
+    this.cursor.x = 0
+  }
+
   _update() {
     if (!this._dirty) return
     const o = this.offset

@@ -62,6 +62,7 @@ const fancyView = (() => {
 
   // Given a string, add it to the terminal.
   const renderOutput = (output) => {
+    term.clearToStartOfLine()
     // If there's a header, make it inverted.
     const re = /^([A-Z ]+)(\n+)/s
     const match = output.match(re)
@@ -70,6 +71,7 @@ const fancyView = (() => {
       term.addChar('\n')
     }
     term.addString(output.replace(re, ''), true)
+    term.addString(inputBuffer, false)
     update()
   }
 
