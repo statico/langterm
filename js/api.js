@@ -26,6 +26,7 @@ const api = (() => {
         body: JSON.stringify({ session: sessionID, message: message }),
       })
       const data = await res.json()
+      if (data.error) throw new Error(data.error)
 
       // If a response has `OPENURL:`, open that URL.
       var match = String(data.output).match(/OPENURL:(\S+)/)
@@ -37,7 +38,7 @@ const api = (() => {
     } catch (err) {
       // Sessions may have expired, or the user might have quit.
       if (/No such session/.test(err)) {
-        return start()
+        return createSession()
       } else {
         throw err
       }
