@@ -178,7 +178,7 @@
     }
 
   const assets = await loadAssets({
-    fontImage: 'assets/apple2font.png',
+    fontImage: 'assets/PrintChar21.png',
     bgImage: 'assets/term.jpg',
     bgFrag: 'shaders/bg.frag',
     bgVert: 'shaders/bg.vert',
