@@ -1,6 +1,10 @@
+//
+// Simple mode of the game -- just a scrollable text box and an input field.
+//
 const simpleView = (() => {
   const $ = document.body.querySelector.bind(document.body)
 
+  // Add a string from the server to the output.
   const renderOutput = (output) => {
     const main = $('main')
 

@@ -14,8 +14,13 @@ This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL
 
 ## How It Works
 
-1. A data structure, Terminal, keeps track of the logical appearance of the
-   terminal.
+The game has two view modes: simple and fancy.
+
+If the user is on a small screen, or fires a touch event, or we cannot initialize WebGL, we fallback to the simple mode which is just a scrollable text box and an input field. Touch devices should have the on-screen keyboard appear which makes the game playable.
+
+On larger desktops with hardware keyboards, provide the full pseudo-CRT experience using WebGL. This works as follows:
+
+1. A data structure, Terminal, keeps track of the logical appearance of the terminal.
 
 1. The terminal is rendered to a 2048x2048 texture by drawing triangles filled up with bitmap font data found in `assets/apple2font.png`. That font came from [KreativeKorp's Ultimate Apple II Font](http://www.kreativekorp.com/software/fonts/apple2.shtml) and was turned into a sprite sheet with [Codehead’s Bitmap Font Generator](http://www.codehead.co.uk/cbfg/).
 

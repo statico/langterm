@@ -1,3 +1,7 @@
+//
+// Terminal emulator that allows clients to get a view buffer. Supports
+// character modes, such as inverse and blink.
+//
 class Terminal {
   constructor() {
     this.width = 60
@@ -16,6 +20,7 @@ class Terminal {
     this.clear()
   }
 
+  // Clear the screen.
   clear() {
     this.end()
     this.cursor.x = 0
@@ -28,6 +33,7 @@ class Terminal {
     this._dirty = true
   }
 
+  // Fill the screen with a character.
   fill(char) {
     this.clear()
     for (var i = 0; i < this.width * this.height - 1; i++) {
@@ -35,6 +41,7 @@ class Terminal {
     }
   }
 
+  // Add a whole string to the terminal, optionally wrapping text.
   addString(str, wrap, attrs = 0) {
     this.end()
     if (!str.length) return
@@ -49,6 +56,7 @@ class Terminal {
     }
   }
 
+  // Add a single char to the terminal.
   addChar(c, attrs) {
     this.end()
     const i = this.cursor.y * this.width + this.cursor.x
@@ -149,6 +157,7 @@ class Terminal {
     return this._geoBuffer
   }
 
+  // Useful for debugging.
   toString() {
     const out = new Array(this.page)
     for (let i = 0, len = this.page; i < len; i++) {

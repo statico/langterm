@@ -1,7 +1,13 @@
+//
+// Initialize the game. Try fancy mode on large screens that support WebGL. If
+// we detect a touch event or are on a small screen, go with simple mode. Fall
+// back to simple and original mode of more advanced modes don't work.
+//
 const originalBody = document.querySelector('.content').innerHTML
 let mode = 'original'
 
-const goOriginal = () => {
+// Orignal mode: Just static text and links.
+const goOriginal = async () => {
   try {
     simpleView.teardown()
     fancyView.teardown()
@@ -13,29 +19,39 @@ const goOriginal = () => {
   document.body.innerHTML = originalBody
 }
 
-const goFancy = () => {
-  if (mode !== 'fancy') {
-    simpleView.teardown()
-    fancyView.setup()
-    mode = 'fancy'
-  }
-}
-
-const goSimple = () => {
+// Simple mode: Scrollable text & an input field.
+const goSimple = async () => {
   if (mode !== 'simple') {
-    fancyView.teardown()
-    simpleView.setup()
+    await fancyView.teardown()
+    await simpleView.setup()
     mode = 'simple'
   }
 }
 
-window.addEventListener('error', goOriginal)
+// Fancy mode: The full pseudo-CRT experience.
+const goFancy = async () => {
+  if (mode !== 'fancy') {
+    await simpleView.teardown()
+    await fancyView.setup()
+    mode = 'fancy'
+  }
+}
 
-const updateView = () => {
+const updateView = async () => {
   if (document.body.clientWidth > 768) {
-    goFancy()
+    try {
+      await goFancy()
+    } catch (err) {
+      console.error(`Couldn't do fancy mode: ${err}`)
+      try {
+        await goSimple()
+      } catch (err) {
+        console.error(`Couldn't do simple mode: ${err}`)
+        await goOriginal()
+      }
+    }
   } else {
-    goSimple()
+    await goSimple()
   }
 }
 
