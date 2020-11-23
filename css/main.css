@@ -27,7 +27,8 @@ body {
 body,
 input,
 button {
-  font-family: 'PrintChar21', monospace;
+  font-family: 'PrintChar21', ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
   font-weight: 500;
   font-size: 16px;
   line-height: 1.2;
