@@ -43,11 +43,11 @@ const api = (() => {
     // Use `?new` to force a new session.
     if (document.location.search.substr(1) === 'new') sessionStorage.clear()
 
-    let sessionID = sessionStorage.getItem('sessionID')
-    if (!sessionID) {
-      return createSession()
+    sessionID = sessionStorage.getItem('sessionID')
+    if (sessionID) {
+      return await send('look')
     } else {
-      return send('look')
+      return await createSession()
     }
   }
 

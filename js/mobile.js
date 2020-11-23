@@ -49,7 +49,11 @@ const mobileView = (() => {
       renderOutput(await api.send(message))
     })
 
-    renderOutput(await api.setup())
+    try {
+      renderOutput(await api.setup())
+    } catch (err) {
+      renderOutput('?ERROR? ' + err + '\n\nPlease tell Ian.')
+    }
   }
 
   const teardown = () => {}
