@@ -25,6 +25,10 @@ body {
 }
 
 body,
+p,
+h1,
+ul,
+li,
 input,
 button {
   font-family: 'PrintChar21', ui-monospace, SFMono-Regular, Menlo, Monaco,
@@ -37,12 +41,36 @@ button {
 body,
 a {
   color: var(--fg);
-}
-a:hover {
   text-decoration: none;
+  border-bottom: 2px solid var(--fg);
+}
+a:active {
+  background: var(--fg);
+  color: var(--bg);
 }
 
-body.noscript {
+h1,
+p,
+li {
+  margin-bottom: 1rem;
+}
+
+h1 {
+  display: inline-block;
+  background: var(--fg);
+  color: var(--bg);
+}
+
+ul {
+  list-style-type: none;
+}
+
+li:before {
+  content: '* ';
+}
+
+body.original {
+  width: auto;
   padding: 2rem;
   font-size: 18px;
 }

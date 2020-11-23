@@ -1,15 +1,16 @@
-const originalBody = document.body.innerHTML
+const originalBody = document.querySelector('.content').innerHTML
 let mode = 'original'
 
 const goOriginal = () => {
-  mode = 'original'
-  document.body.innerHTML = originalBody
   try {
     simpleView.teardown()
     fancyView.teardown()
   } catch (err) {
     // Do nothing.
   }
+  mode = 'original'
+  document.body.className = 'original'
+  document.body.innerHTML = originalBody
 }
 
 const goFancy = () => {
@@ -54,7 +55,8 @@ window.addEventListener('touchstart', () => {
   goSimple()
 })
 
-window.addEventListener('error', () => {
+window.addEventListener('error', (err) => {
   window.removeEventListener('resize', updateViewDebounced)
   goOriginal()
+  document.body.innerHTML += `<p>${err}</p>`
 })
