@@ -20,7 +20,7 @@ body {
   overflow: hidden;
   width: 100%;
   height: 100%;
-  background: var(--bg);
+  background: #000;
   color: var(--fg);
 }
 
@@ -67,6 +67,14 @@ ul {
 }
 li:before {
   content: '* ';
+}
+
+/* Try to prevent a flash of content before the main UI loads */
+body.loading {
+  background: #000;
+}
+body.loading .content {
+  display: none;
 }
 
 body.original {
