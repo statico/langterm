@@ -82,6 +82,7 @@ const fancyView = (() => {
       term.addString('\n\n')
       const message = inputBuffer
       inputBuffer = ''
+      update()
       renderOutput(await api.send(message))
     } else if (e.keyCode === 8) {
       // Backspace
