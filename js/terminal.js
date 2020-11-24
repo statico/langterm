@@ -123,11 +123,12 @@ class Terminal {
 
   clearToStartOfLine() {
     var o = this.offset
-    for (let i = 0; i < this.cursor.x; i++) {
+    while (this.cursor.x > 0) {
+      var i = this.cursor.y * this.width + this.cursor.x
       this.buffer[i + o] = ' '
       this.attrs[i + o] = 0
+      this.cursor.x--
     }
-    this.cursor.x = 0
   }
 
   _update() {

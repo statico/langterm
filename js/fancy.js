@@ -9,7 +9,16 @@ const fancyView = (() => {
     canvas,
     gl,
     term,
-    inputBuffer = ''
+    inputBuffer = '',
+    historyIndex = 0
+
+  const history = (() => {
+    try {
+      return JSON.parse(sessionStorage.getItem('history')) || []
+    } catch (err) {
+      return []
+    }
+  })()
 
   // A giant pile of global variables that I'm too lazy to refactor. Sorry.
   // GL is kinda boilerplate-y.
@@ -84,21 +93,43 @@ const fancyView = (() => {
       inputBuffer = ''
       update()
       renderOutput(await api.send(message))
+      if (/\S/.test(message)) {
+        history.push(message)
+        if (history.length > 50) history.unshift() // Emulate limited history for annoying accuracy :D
+        sessionStorage.setItem('history', JSON.stringify(history))
+      }
+      historyIndex = 0
     } else if (e.keyCode === 8) {
       // Backspace
       e.preventDefault() // Otherwise Backspace navigates back on Firefox.
       term.backspace()
       inputBuffer = inputBuffer.slice(0, -1)
+    } else if (e.keyCode === 38) {
+      // Up (previous history entry)
+      if (historyIndex === history.length) return
+      historyIndex++
+      inputBuffer = history[history.length - historyIndex]
+      term.clearToStartOfLine()
+      term.addChar('>')
+      term.addString(inputBuffer, false)
+    } else if (e.keyCode === 40) {
+      // Down (previous history entry)
+      if (historyIndex === 0) return
+      historyIndex--
+      inputBuffer = history[history.length - historyIndex] || ''
+      term.clearToStartOfLine()
+      term.addChar('>')
+      term.addString(inputBuffer, false)
     } else if (e.keyCode === 33) {
-      // Page Up
+      // Page Up (scroll page up)
       e.preventDefault()
       term.pageUp()
     } else if (e.keyCode === 34) {
-      // Page Down
+      // Page Down (scroll page down)
       e.preventDefault()
       term.pageDown()
     } else if (e.keyCode === 35) {
-      // End
+      // End (scroll all the way down)
       e.preventDefault()
       term.end()
     } else if (e.key.length === 1) {
@@ -106,6 +137,11 @@ const fancyView = (() => {
       if (e.ctrlKey && e.key === 'l') {
         term.clear()
         term.addChar('>')
+        term.addString(inputBuffer, false)
+      } else if (e.ctrlKey && e.key === 'u') {
+        term.clearToStartOfLine()
+        term.addChar('>')
+        inputBuffer = ''
       } else {
         term.addChar(e.key)
         inputBuffer += e.key
