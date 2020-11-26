@@ -85,6 +85,7 @@ body.original {
 
 body.simple {
   background-image: url(../assets/screen-only.jpg);
+  background-size: cover;
   box-shadow: 0px 0px 20rem 5rem rgba(0, 0, 0, 0.4) inset;
   display: flex;
   flex-direction: column;
