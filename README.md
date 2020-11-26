@@ -8,7 +8,7 @@
 
 ```
 
-This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL/non-desktop browsers. Made as a learning example and frontend for a cute text adventure game. It's also used as my home page on https://langworth.com/. Public domain, use as you wish.
+This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL/non-desktop browsers. Made as a learning example and frontend for a cute text adventure game. It's also used as my home page on https://langworth.com/.
 
 <img src="https://github.com/statico/langterm/blob/master/assets/screenshot.jpg?raw=true" width="250"/>
 
@@ -48,3 +48,7 @@ I started with [WebGL Boilerplate](https://github.com/paulirish/webgl-boilerplat
 - [Inform7](http://inform7.com/) was used to create the story
 - [glulxe-httpd](https://github.com/statico/glulxe-httpd) runs the story
 - [WebGL Boilerplate](https://github.com/paulirish/webgl-boilerplate)
+
+## License
+
+The source code in this repository is released under the MIT License. Other assets, such as the VT520 photo, fonts and CRT GLSL shader, are subject to any license provided by the original authors.
