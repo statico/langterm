@@ -155,6 +155,7 @@ class Terminal {
       this._geoBuffer[j + 4] = i
       this._geoBuffer[j + 5] = 2
     }
+    this._dirty = false
   }
 
   getCharBuffer() {
