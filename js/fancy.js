@@ -644,7 +644,8 @@ Password: **********\n\n`
       renderOutput(await api.setup())
     } catch (err) {
       const ua = navigator.userAgent
-      term.addString(`?ERROR? ${err}\n\nPlease tell Ian.\n\n${ua}`)
+      term.addString(`?ERROR? ${err}\n\nPlease tell Ian.\n\n${ua}\n\n`, true)
+      update()
       console.error(err)
     }
   }
