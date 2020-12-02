@@ -46,6 +46,8 @@ ver 2020.11.23.1
 Username: ian                                  
 Password: **********</pre>`
 
+    $('input').focus()
+
     $('form').addEventListener('submit', async (event) => {
       event.preventDefault()
 
