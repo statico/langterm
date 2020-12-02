@@ -18,7 +18,13 @@
     <meta name="description" content="A person who does things." />
     <link rel="shortcut icon" href="assets/favicon.png" />
     <link rel="icon" size="64x64" href="assets/favicon.png" />
-    <link href="css/main.css" rel="stylesheet" />
+    <link href="css/noscript.css" rel="stylesheet" />
+    <link href="css/main.css" rel="stylesheet" disabled />
+    <script>
+      const css = document.querySelectorAll('[rel=stylesheet]')
+      css[0].disabled = true // Disable noscript.css
+      css[1].disabled = false // Enable main.css
+    </script>
   </head>
   <body class="loading">
     <div class="content">
