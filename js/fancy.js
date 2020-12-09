@@ -91,7 +91,6 @@ const fancyView = (() => {
       term.addString('\n\n')
       const message = inputBuffer
       inputBuffer = ''
-      update()
       renderOutput(await api.send(message))
       if (/\S/.test(message)) {
         history.push(message)
@@ -575,9 +574,9 @@ ${fragment}`
   const resize = () => {
     // This requires the canvas to be set at 100% width and height in CSS,
     // otherwise really weird stuff happens while resizing.
-    var r = window.devicePixelRatio || 1
-    var w = Math.floor(gl.canvas.clientWidth * r)
-    var h = Math.floor(gl.canvas.clientHeight * r)
+    const r = window.devicePixelRatio || 1
+    const w = Math.floor(gl.canvas.clientWidth * r)
+    const h = Math.floor(gl.canvas.clientHeight * r)
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = parameters.screenWidth = w
       canvas.height = parameters.screenHeight = h

@@ -25,8 +25,8 @@ class Terminal {
     this.end()
     this.cursor.x = 0
     this.cursor.y = 0
-    var o = this.offset
-    for (var i = 0, len = this.page; i < len; i++) {
+    const o = this.offset
+    for (let i = 0, len = this.page; i < len; i++) {
       this.buffer[i + o] = ' '
       this.attrs[i + o] = 0
     }
@@ -36,7 +36,7 @@ class Terminal {
   // Fill the screen with a character.
   fill(char) {
     this.clear()
-    for (var i = 0; i < this.width * this.height - 1; i++) {
+    for (let i = 0; i < this.width * this.height - 1; i++) {
       this.addChar(char)
     }
   }
@@ -51,7 +51,7 @@ class Terminal {
         .match(RegExp('.{1,' + (this.width - 2) + '}(\\s|$)', 'g'))
         .join('\n')
     }
-    for (var i = 0; i < str.length; i++) {
+    for (let i = 0; i < str.length; i++) {
       this.addChar(str.charAt(i), attrs)
     }
   }
@@ -109,26 +109,27 @@ class Terminal {
   }
 
   backspace() {
-    var o = this.offset
-    if (this.cursor.x > 0) {
-      var i = this.cursor.y * this.width + this.cursor.x - 1
-      // Hack which assumes a '>' in the first column is a prompt.
-      if (!(this.cursor.x === 1 && this.buffer[i + o] === '>')) {
-        this.buffer[i + o] = ' '
-        this.attrs[i + o] = 0
-        this.cursor.x--
-      }
+    if (this.cursor.x <= 0) return
+    const o = this.offset
+    const i = this.cursor.y * this.width + this.cursor.x - 1
+    // Assume there is a '>' in the first column as a prompt.
+    if (!(this.cursor.x === 1 && this.buffer[i + o] === '>')) {
+      this.buffer[i + o] = ' '
+      this.attrs[i + o] = 0
+      this.cursor.x--
+      this._dirty = true
     }
   }
 
   clearToStartOfLine() {
-    var o = this.offset
+    const o = this.offset
     while (this.cursor.x > 0) {
-      var i = this.cursor.y * this.width + this.cursor.x
+      const i = this.cursor.y * this.width + this.cursor.x
       this.buffer[i + o] = ' '
       this.attrs[i + o] = 0
       this.cursor.x--
     }
+    this._dirty = true
   }
 
   _update() {
