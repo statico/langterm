@@ -89,6 +89,7 @@ const fancyView = (() => {
     if (e.keyCode === 13) {
       // Enter key
       term.addString('\n\n')
+      update()
       const message = inputBuffer
       inputBuffer = ''
       renderOutput(await api.send(message))
