@@ -21,6 +21,7 @@
     <link href="css/noscript.css" rel="stylesheet" />
     <link href="css/main.css" rel="stylesheet" disabled />
     <script>
+      // Avoid flashes of unstructured content.
       const css = document.querySelectorAll('[rel=stylesheet]')
       css[0].disabled = true // Disable noscript.css
       css[1].disabled = false // Enable main.css
