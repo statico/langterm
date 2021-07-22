@@ -31,9 +31,7 @@ const api = (() => {
       // If a response has `OPENURL:`, open that URL.
       const match = String(data.output).match(/OPENURL:(\S+)/)
       if (match) {
-        setTimeout(() => {
-          document.location.href = match[1]
-        }, 100)
+        window.open(match[1])
         return "> "
       } else {
         return data.output
