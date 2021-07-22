@@ -579,8 +579,20 @@ ${fragment}`
   // Set up fancy mode.
   const setup = async () => {
     document.body.className = "fancy"
+    document.body.innerHTML = `
+      <div class="go-simple">
+        <a href="#" tabindex="0" aria-description="Switch the display to a text mode instead of 3D-rendered text"
+          >Use Text Mode</a>
+      </div>
+      <canvas></canvas>
+    `
 
-    document.body.innerHTML = "<canvas></canvas>"
+    document.querySelector(".go-simple a").addEventListener("click", (e) => {
+      e.preventDefault()
+      window._forceSimple = true
+      goSimple()
+    })
+
     canvas = document.querySelector("canvas")
 
     assets = await loadAssets({

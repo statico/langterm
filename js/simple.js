@@ -29,8 +29,8 @@ const simpleView = (() => {
     document.body.innerHTML = `
       <main></main>
       <form>
-        <input type="text" autofocus />
-        <button>Enter</button>
+        <input type="text" autofocus tabindex="0" />
+        <button tabindex="0">Enter</button>
       </form>
     `
 

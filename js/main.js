@@ -38,7 +38,7 @@ const goFancy = async () => {
 }
 
 const updateView = async () => {
-  if (document.body.clientWidth > 768) {
+  if (document.body.clientWidth > 768 && !window._forceSimple) {
     try {
       await goFancy()
     } catch (err) {
