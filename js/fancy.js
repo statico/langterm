@@ -86,6 +86,9 @@ const fancyView = (() => {
 
   // Handle key events.
   const keydown = async (e) => {
+    // Any key event resets the cursor blinking, like the Apple //e I think.
+    parameters.startTime = Date.now()
+
     if (e.keyCode === 13) {
       // Enter key
       term.addString("\n\n")
