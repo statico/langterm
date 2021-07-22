@@ -9,12 +9,12 @@ const fancyView = (() => {
     canvas,
     gl,
     term,
-    inputBuffer = '',
+    inputBuffer = "",
     historyIndex = 0
 
   const history = (() => {
     try {
-      return JSON.parse(sessionStorage.getItem('history')) || []
+      return JSON.parse(sessionStorage.getItem("history")) || []
     } catch (err) {
       return []
     }
@@ -77,9 +77,9 @@ const fancyView = (() => {
     const match = output.match(re)
     if (match) {
       term.addString(match[1], true, Terminal.ATTR_INVERSE)
-      term.addChar('\n')
+      term.addChar("\n")
     }
-    term.addString(output.replace(re, ''), true)
+    term.addString(output.replace(re, ""), true)
     term.addString(inputBuffer, false)
     update()
   }
@@ -88,15 +88,15 @@ const fancyView = (() => {
   const keydown = async (e) => {
     if (e.keyCode === 13) {
       // Enter key
-      term.addString('\n\n')
+      term.addString("\n\n")
       update()
       const message = inputBuffer
-      inputBuffer = ''
+      inputBuffer = ""
       renderOutput(await api.send(message))
       if (/\S/.test(message)) {
         history.push(message)
         if (history.length > 50) history.unshift() // Emulate limited history for annoying accuracy :D
-        sessionStorage.setItem('history', JSON.stringify(history))
+        sessionStorage.setItem("history", JSON.stringify(history))
       }
       historyIndex = 0
     } else if (e.keyCode === 8) {
@@ -110,15 +110,15 @@ const fancyView = (() => {
       historyIndex++
       inputBuffer = history[history.length - historyIndex]
       term.clearToStartOfLine()
-      term.addChar('>')
+      term.addChar(">")
       term.addString(inputBuffer, false)
     } else if (e.keyCode === 40) {
       // Down (previous history entry)
       if (historyIndex === 0) return
       historyIndex--
-      inputBuffer = history[history.length - historyIndex] || ''
+      inputBuffer = history[history.length - historyIndex] || ""
       term.clearToStartOfLine()
-      term.addChar('>')
+      term.addChar(">")
       term.addString(inputBuffer, false)
     } else if (e.keyCode === 33) {
       // Page Up (scroll page up)
@@ -134,14 +134,14 @@ const fancyView = (() => {
       term.end()
     } else if (e.key.length === 1) {
       // Modifier keys have long names.
-      if (e.ctrlKey && e.key === 'l') {
+      if (e.ctrlKey && e.key === "l") {
         term.clear()
-        term.addChar('>')
+        term.addChar(">")
         term.addString(inputBuffer, false)
-      } else if (e.ctrlKey && e.key === 'u') {
+      } else if (e.ctrlKey && e.key === "u") {
         term.clearToStartOfLine()
-        term.addChar('>')
-        inputBuffer = ''
+        term.addChar(">")
+        inputBuffer = ""
       } else {
         term.addChar(e.key)
         inputBuffer += e.key
@@ -161,12 +161,12 @@ const fancyView = (() => {
   // Create a WebGL program given an vertex and fragment shader pair.
   const createProgram = (vertex, fragment) => {
     const program = gl.createProgram()
-    const preamble = '#ifdef GL_ES\nprecision mediump float;\n#endif\n\n'
+    const preamble = "#ifdef GL_ES\nprecision mediump float;\n#endif\n\n"
     const vs = createShader(preamble + vertex, gl.VERTEX_SHADER)
     const fs = createShader(preamble + fragment, gl.FRAGMENT_SHADER)
 
     if (vs == null || fs == null)
-      throw new Error('Either vertex or fragment shader is null')
+      throw new Error("Either vertex or fragment shader is null")
     gl.attachShader(program, vs)
     gl.attachShader(program, fs)
     gl.deleteShader(vs)
@@ -199,8 +199,8 @@ ${fragment}`
 
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       throw new Error(
-        (type === gl.VERTEX_SHADER ? 'VERTEX' : 'FRAGMENT') +
-          ' SHADER:\n' +
+        (type === gl.VERTEX_SHADER ? "VERTEX" : "FRAGMENT") +
+          " SHADER:\n" +
           gl.getShaderInfoLog(shader)
       )
     }
@@ -210,26 +210,15 @@ ${fragment}`
   // Initialize everything.
   const initWebGL = () => {
     const UNIT_QUAD_GEO = new Float32Array([
-      1.0,
-      1.0,
-      0.0,
-      -1.0,
-      1.0,
-      0.0,
-      1.0,
-      -1.0,
-      0.0,
-      -1.0,
-      -1.0,
-      0.0,
+      1.0, 1.0, 0.0, -1.0, 1.0, 0.0, 1.0, -1.0, 0.0, -1.0, -1.0, 0.0,
     ])
     const UNIT_QUAT_COORDS = new Float32Array([1, 1, 0, 1, 1, 0, 0, 0])
 
     try {
-      gl = canvas.getContext('experimental-webgl', { alpha: false })
+      gl = canvas.getContext("experimental-webgl", { alpha: false })
     } catch (error) {}
     if (!gl) {
-      throw new Error('Cannot create WebGL context.')
+      throw new Error("Cannot create WebGL context.")
     }
 
     gl.disable(gl.DEPTH_TEST)
@@ -238,12 +227,12 @@ ${fragment}`
 
     // Terminal shader
     termProgram = createProgram(assets.termVert, assets.termFrag)
-    termTimeLocation = gl.getUniformLocation(termProgram, 'uTime')
-    termScreenSizeLocation = gl.getUniformLocation(termProgram, 'uScreenSize')
-    termGridSizeLocation = gl.getUniformLocation(termProgram, 'uGridSize')
-    termFontTexLocation = gl.getUniformLocation(termProgram, 'uFont')
-    termGeoLocation = gl.getAttribLocation(termProgram, 'aGeo')
-    termCharLocation = gl.getAttribLocation(termProgram, 'aChar')
+    termTimeLocation = gl.getUniformLocation(termProgram, "uTime")
+    termScreenSizeLocation = gl.getUniformLocation(termProgram, "uScreenSize")
+    termGridSizeLocation = gl.getUniformLocation(termProgram, "uGridSize")
+    termFontTexLocation = gl.getUniformLocation(termProgram, "uFont")
+    termGeoLocation = gl.getAttribLocation(termProgram, "aGeo")
+    termCharLocation = gl.getAttribLocation(termProgram, "aChar")
 
     // Terminal gemoetry buffer
     termGeoBuffer = gl.createBuffer()
@@ -308,9 +297,9 @@ ${fragment}`
 
     // Post-process shader
     postProgram = createProgram(assets.postVert, assets.postFrag)
-    postTermTexLocation = gl.getUniformLocation(postProgram, 'uTermTex')
-    postPositionLocation = gl.getAttribLocation(postProgram, 'aPosition')
-    postTexCoordLocation = gl.getAttribLocation(postProgram, 'aTexCoord')
+    postTermTexLocation = gl.getUniformLocation(postProgram, "uTermTex")
+    postPositionLocation = gl.getAttribLocation(postProgram, "aPosition")
+    postTexCoordLocation = gl.getAttribLocation(postProgram, "aTexCoord")
 
     // Post-process geometry buffer
     postPositionBuffer = gl.createBuffer()
@@ -372,12 +361,12 @@ ${fragment}`
 
     // Background shader
     bgProgram = createProgram(assets.bgVert, assets.bgFrag)
-    bgImageTexLocation = gl.getUniformLocation(bgProgram, 'uBGImageTex')
-    bgScreenSizeLocation = gl.getUniformLocation(bgProgram, 'uScreenSize')
-    bgTimeLocation = gl.getUniformLocation(bgProgram, 'uTime')
-    bgSizeLocation = gl.getUniformLocation(bgProgram, 'uBGSize')
-    bgPositionLocation = gl.getAttribLocation(bgProgram, 'aPosition')
-    bgTexCoordLocation = gl.getAttribLocation(bgProgram, 'aTexCoord')
+    bgImageTexLocation = gl.getUniformLocation(bgProgram, "uBGImageTex")
+    bgScreenSizeLocation = gl.getUniformLocation(bgProgram, "uScreenSize")
+    bgTimeLocation = gl.getUniformLocation(bgProgram, "uTime")
+    bgSizeLocation = gl.getUniformLocation(bgProgram, "uBGSize")
+    bgPositionLocation = gl.getAttribLocation(bgProgram, "aPosition")
+    bgTexCoordLocation = gl.getAttribLocation(bgProgram, "aTexCoord")
 
     // Background image
     bgImageTex = gl.createTexture()
@@ -411,11 +400,11 @@ ${fragment}`
 
     // Composition shader
     compProgram = createProgram(assets.compositeVert, assets.compositeFrag)
-    compPostTexLocation = gl.getUniformLocation(compProgram, 'uPostTex')
-    compScreenSizeLocation = gl.getUniformLocation(compProgram, 'uScreenSize')
-    compBGSizeLocation = gl.getUniformLocation(compProgram, 'uBGSize')
-    compPositionLocation = gl.getAttribLocation(compProgram, 'aPosition')
-    compTexCoordLocation = gl.getAttribLocation(compProgram, 'aTexCoord')
+    compPostTexLocation = gl.getUniformLocation(compProgram, "uPostTex")
+    compScreenSizeLocation = gl.getUniformLocation(compProgram, "uScreenSize")
+    compBGSizeLocation = gl.getUniformLocation(compProgram, "uBGSize")
+    compPositionLocation = gl.getAttribLocation(compProgram, "aPosition")
+    compTexCoordLocation = gl.getAttribLocation(compProgram, "aTexCoord")
 
     // Composition geometry buffer
     compPositionBuffer = gl.createBuffer()
@@ -586,22 +575,22 @@ ${fragment}`
 
   // Set up fancy mode.
   const setup = async () => {
-    document.body.className = 'fancy'
+    document.body.className = "fancy"
 
-    document.body.innerHTML = '<canvas></canvas>'
-    canvas = document.querySelector('canvas')
+    document.body.innerHTML = "<canvas></canvas>"
+    canvas = document.querySelector("canvas")
 
     assets = await loadAssets({
-      fontImage: 'fonts/PrintChar21.png',
-      bgImage: 'assets/term.jpg',
-      bgFrag: 'shaders/bg.frag',
-      bgVert: 'shaders/bg.vert',
-      compositeFrag: 'shaders/composite.frag',
-      compositeVert: 'shaders/composite.vert',
-      postFrag: 'shaders/post.frag',
-      postVert: 'shaders/post.vert',
-      termFrag: 'shaders/term.frag',
-      termVert: 'shaders/term.vert',
+      fontImage: "fonts/PrintChar21.png",
+      bgImage: "assets/term.jpg",
+      bgFrag: "shaders/bg.frag",
+      bgVert: "shaders/bg.vert",
+      compositeFrag: "shaders/composite.frag",
+      compositeVert: "shaders/composite.vert",
+      postFrag: "shaders/post.frag",
+      postVert: "shaders/post.vert",
+      termFrag: "shaders/term.frag",
+      termVert: "shaders/term.vert",
     })
 
     term = new Terminal()
@@ -636,8 +625,8 @@ Password: **********\n\n`
     resize()
     animate()
 
-    window.addEventListener('resize', resize)
-    window.addEventListener('keydown', keydown)
+    window.addEventListener("resize", resize)
+    window.addEventListener("keydown", keydown)
     window.focus()
 
     try {
@@ -652,10 +641,10 @@ Password: **********\n\n`
 
   // Get rid of everything.
   const teardown = () => {
-    window.removeEventListener('keydown', keydown)
-    window.removeEventListener('resize', resize)
+    window.removeEventListener("keydown", keydown)
+    window.removeEventListener("resize", resize)
     gl = null // Stops animation.
-    document.body.innerHTML = ''
+    document.body.innerHTML = ""
   }
 
   return { setup, teardown }

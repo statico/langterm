@@ -12,7 +12,7 @@ class Terminal {
     this.attrs = new Array(this.buffer.length)
     this.offset = this.page * 4
     for (let i = 0, len = this.buffer.length; i < len; i++) {
-      this.buffer[i] = ' '
+      this.buffer[i] = " "
       this.attrs[i] = 0
     }
     this._charBuffer = new Float32Array(this.buffer.length * 6)
@@ -27,7 +27,7 @@ class Terminal {
     this.cursor.y = 0
     const o = this.offset
     for (let i = 0, len = this.page; i < len; i++) {
-      this.buffer[i + o] = ' '
+      this.buffer[i + o] = " "
       this.attrs[i + o] = 0
     }
     this._dirty = true
@@ -48,8 +48,8 @@ class Terminal {
     if (wrap) {
       // https://www.rosettacode.org/wiki/Word_wrap#JavaScript
       str = str
-        .match(RegExp('.{1,' + (this.width - 2) + '}(\\s|$)', 'g'))
-        .join('\n')
+        .match(RegExp(".{1," + (this.width - 2) + "}(\\s|$)", "g"))
+        .join("\n")
     }
     for (let i = 0; i < str.length; i++) {
       this.addChar(str.charAt(i), attrs)
@@ -61,11 +61,11 @@ class Terminal {
     this.end()
     const i = this.cursor.y * this.width + this.cursor.x
     const o = this.offset
-    if (c !== '\n') {
+    if (c !== "\n") {
       this.buffer[i + o] = c
       this.attrs[i + o] = attrs || 0
     }
-    if (c === '\n' || this.cursor.x >= this.width - 1) {
+    if (c === "\n" || this.cursor.x >= this.width - 1) {
       this.cursor.x = 0
       this.cursor.y++
     } else {
@@ -79,7 +79,7 @@ class Terminal {
           this.buffer[i] = this.buffer[i + this.width]
           this.attrs[i] = this.attrs[i + this.width]
         } else {
-          this.buffer[i] = ' '
+          this.buffer[i] = " "
           this.attrs[i] = 0
         }
       }
@@ -113,8 +113,8 @@ class Terminal {
     const o = this.offset
     const i = this.cursor.y * this.width + this.cursor.x - 1
     // Assume there is a '>' in the first column as a prompt.
-    if (!(this.cursor.x === 1 && this.buffer[i + o] === '>')) {
-      this.buffer[i + o] = ' '
+    if (!(this.cursor.x === 1 && this.buffer[i + o] === ">")) {
+      this.buffer[i + o] = " "
       this.attrs[i + o] = 0
       this.cursor.x--
       this._dirty = true
@@ -125,7 +125,7 @@ class Terminal {
     const o = this.offset
     while (this.cursor.x > 0) {
       const i = this.cursor.y * this.width + this.cursor.x
-      this.buffer[i + o] = ' '
+      this.buffer[i + o] = " "
       this.attrs[i + o] = 0
       this.cursor.x--
     }
@@ -174,9 +174,9 @@ class Terminal {
     const out = new Array(this.page)
     for (let i = 0, len = this.page; i < len; i++) {
       out[i] =
-        this.buffer[i + o] + (i !== 0 && i % this.width === 0 ? '\n' : '')
+        this.buffer[i + o] + (i !== 0 && i % this.width === 0 ? "\n" : "")
     }
-    return out.join('')
+    return out.join("")
   }
 }
 

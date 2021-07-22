@@ -6,10 +6,10 @@ const simpleView = (() => {
 
   // Add a string from the server to the output.
   const renderOutput = (output) => {
-    const main = $('main')
+    const main = $("main")
 
     // Remove trailing prompt character.
-    const text = output.replace(/>$/s, '').trim()
+    const text = output.replace(/>$/s, "").trim()
 
     // If there's a header, make it inverted.
     const re = /^([A-Z ]+)(\n+)/s
@@ -18,14 +18,14 @@ const simpleView = (() => {
       main.innerHTML += `<div class="heading">${match[1]}</div>`
     }
 
-    const el = document.createElement('div')
-    el.innerText = text.replace(re, '') + '\n\n'
+    const el = document.createElement("div")
+    el.innerText = text.replace(re, "") + "\n\n"
     main.appendChild(el)
     main.scrollTop = main.scrollHeight
   }
 
   const setup = async () => {
-    document.body.className = 'simple'
+    document.body.className = "simple"
     document.body.innerHTML = `
       <main></main>
       <form>
@@ -34,7 +34,7 @@ const simpleView = (() => {
       </form>
     `
 
-    $('main').innerHTML = `<pre>   __ _____________  __  ___                 
+    $("main").innerHTML = `<pre>   __ _____________  __  ___                 
   / //_  __/ __/ _ \\/  |/  /
  / /__/ / / _// , _/ /|_/ /
 /____/_/ /___/_/|_/_/  /_/
@@ -46,21 +46,21 @@ ver 2020.11.23.1
 Username: ian                                  
 Password: **********</pre>`
 
-    $('input').focus()
+    $("input").focus()
 
-    $('form').addEventListener('submit', async (event) => {
+    $("form").addEventListener("submit", async (event) => {
       event.preventDefault()
 
-      const input = $('input')
+      const input = $("input")
       const message = input.value
-      input.value = ''
+      input.value = ""
       input.focus()
 
-      const el = document.createElement('div')
-      el.className = 'input'
-      el.innerText = '> ' + message.replace(/[^\w ]/g, '') + '\n\n'
+      const el = document.createElement("div")
+      el.className = "input"
+      el.innerText = "> " + message.replace(/[^\w ]/g, "") + "\n\n"
 
-      const main = $('main')
+      const main = $("main")
       main.appendChild(el)
       main.scrollTop = main.scrollHeight
 
@@ -77,7 +77,7 @@ Password: **********</pre>`
   }
 
   const teardown = () => {
-    document.body.innerHTML = ''
+    document.body.innerHTML = ""
   }
 
   return { setup, teardown }

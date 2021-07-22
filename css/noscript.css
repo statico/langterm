@@ -4,11 +4,11 @@
 }
 
 @font-face {
-  font-family: 'PrintChar21';
+  font-family: "PrintChar21";
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('../fonts/PrintChar21.woff2') format('woff2');
+  src: url("../fonts/PrintChar21.woff2") format("woff2");
 }
 
 * {
@@ -28,8 +28,8 @@ p,
 h1,
 ul,
 li {
-  font-family: 'PrintChar21', ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-family: "PrintChar21", ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
   font-weight: 500;
   font-size: 14px;
   line-height: 1.2;
@@ -72,5 +72,5 @@ ul {
   list-style-type: none;
 }
 li:before {
-  content: '* ';
+  content: "* ";
 }

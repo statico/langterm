@@ -3,8 +3,8 @@
 // we detect a touch event or are on a small screen, go with simple mode. Fall
 // back to simple and original mode of more advanced modes don't work.
 //
-const originalBody = document.querySelector('.content').innerHTML
-let mode = 'original'
+const originalBody = document.querySelector(".content").innerHTML
+let mode = "original"
 
 // Orignal mode: Just static text and links.
 const goOriginal = async () => {
@@ -14,26 +14,26 @@ const goOriginal = async () => {
   } catch (err) {
     // Do nothing.
   }
-  mode = 'original'
-  document.body.className = 'original'
+  mode = "original"
+  document.body.className = "original"
   document.body.innerHTML = originalBody
 }
 
 // Simple mode: Scrollable text & an input field.
 const goSimple = async () => {
-  if (mode !== 'simple') {
+  if (mode !== "simple") {
     await fancyView.teardown()
     await simpleView.setup()
-    mode = 'simple'
+    mode = "simple"
   }
 }
 
 // Fancy mode: The full pseudo-CRT experience.
 const goFancy = async () => {
-  if (mode !== 'fancy') {
+  if (mode !== "fancy") {
     await simpleView.teardown()
     await fancyView.setup()
-    mode = 'fancy'
+    mode = "fancy"
   }
 }
 
@@ -63,16 +63,16 @@ const updateViewDebounced = (() => {
   }
 })()
 
-window.addEventListener('resize', updateViewDebounced)
-window.addEventListener('load', updateView)
+window.addEventListener("resize", updateViewDebounced)
+window.addEventListener("load", updateView)
 
-window.addEventListener('touchstart', () => {
-  window.removeEventListener('resize', updateViewDebounced)
+window.addEventListener("touchstart", () => {
+  window.removeEventListener("resize", updateViewDebounced)
   goSimple()
 })
 
-window.addEventListener('error', (err) => {
-  window.removeEventListener('resize', updateViewDebounced)
+window.addEventListener("error", (err) => {
+  window.removeEventListener("resize", updateViewDebounced)
   goOriginal()
   document.body.innerHTML += `<p>${err}</p>`
 })

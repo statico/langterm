@@ -3,26 +3,26 @@
 //
 const api = (() => {
   const ENDPOINT = /langworth\.com/.test(document.location.hostname)
-    ? 'https://game.langworth.com'
+    ? "https://game.langworth.com"
     : `http://${document.location.hostname}:5000`
 
   let sessionID
 
   const createSession = async () => {
     // See statico/glulxe-httpd for what this connects to.
-    const res = await fetch(ENDPOINT + '/new', { method: 'POST' })
+    const res = await fetch(ENDPOINT + "/new", { method: "POST" })
     const data = await res.json()
     sessionID = data.session
-    sessionStorage.setItem('sessionID', sessionID)
+    sessionStorage.setItem("sessionID", sessionID)
     return data.output
   }
 
   // Send a message.
   const send = async (message) => {
     try {
-      const res = await fetch(ENDPOINT + '/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch(ENDPOINT + "/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session: sessionID, message: message }),
       })
       const data = await res.json()
@@ -34,7 +34,7 @@ const api = (() => {
         setTimeout(() => {
           document.location.href = match[1]
         }, 100)
-        return '> '
+        return "> "
       } else {
         return data.output
       }
@@ -51,13 +51,13 @@ const api = (() => {
   // Initialize the API and get an introductory message.
   const setup = async () => {
     // Debugging: Use `?new` to force a new session.
-    if (document.location.search.substr(1) === 'new') sessionStorage.clear()
+    if (document.location.search.substr(1) === "new") sessionStorage.clear()
 
     // If there's already a session, execute 'look'. Otherwise, create a
     // session.
-    sessionID = sessionStorage.getItem('sessionID')
+    sessionID = sessionStorage.getItem("sessionID")
     if (sessionID) {
-      return await send('look')
+      return await send("look")
     } else {
       return await createSession()
     }
