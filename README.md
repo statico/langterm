@@ -10,7 +10,7 @@
 
 This is a WebGL-based VT220 emulator with a simple fallback for non-JS/non-WebGL/non-desktop browsers. Made as a learning example and frontend for a cute text adventure game. It's also used as my home page on https://langworth.com/.
 
-<img src="https://github.com/statico/langterm/blob/master/assets/screenshot.jpg?raw=true" width="250"/>
+![image](https://user-images.githubusercontent.com/137158/146451888-900e5e9f-fd83-4fc0-8f9c-3ae894e505f6.png)
 
 ## How It Works
 
