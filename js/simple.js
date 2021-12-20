@@ -34,16 +34,16 @@ const simpleView = (() => {
       </form>
     `
 
-    $("main").innerHTML = `<pre>   __ _____________  __  ___                 
+    $("main").innerHTML = `<pre>   __ _____________  __  ___
   / //_  __/ __/ _ \\/  |/  /
  / /__/ / / _// , _/ /|_/ /
 /____/_/ /___/_/|_/_/  /_/
 
-28.8 kbit/s ][ 
+28.8 kbit/s ][
 ver 2020.08.26.1
-617-555-1337    
-                                                   
-Username: ian                                  
+617-555-1337
+
+Username: statico
 Password: **********</pre>`
 
     $("input").focus()
