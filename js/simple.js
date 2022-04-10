@@ -40,7 +40,7 @@ const simpleView = (() => {
 /____/_/ /___/_/|_/_/  /_/
 
 28.8 kbit/s ][
-ver 2020.08.26.1
+ver 2022.04.10.1
 617-555-1337
 
 Username: statico
