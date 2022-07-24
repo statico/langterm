@@ -4,7 +4,7 @@
 const api = (() => {
   const ENDPOINT = /langworth\.com/.test(document.location.hostname)
     ? "https://game.langworth.com"
-    : `http://${document.location.hostname}:5000`
+    : `http://${document.location.hostname}:8080`
 
   let sessionID
 
