@@ -41,7 +41,7 @@ I started with [WebGL Boilerplate](https://github.com/paulirish/webgl-boilerplat
 
 ## See Also
 
-- ["The Archive (Public Redacted Version)](https://github.com/statico/the-archive-public) for the game on my home page
+- ["The Archive" (Public Redacted Version)](https://github.com/statico/the-archive-public) for the game on my home page
 - [Apple II font](http://www.kreativekorp.com/software/fonts/apple2.shtml) from KreativeKorp (used with permission)
 - [Codehead’s Bitmap Font Generator](http://www.codehead.co.uk/cbfg/)
 - [CRT styled scanline shader](https://www.shadertoy.com/view/XsjSzR) by Timothy Lottes
