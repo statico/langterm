@@ -139,3 +139,26 @@ body.fancy .go-simple {
   background: var(--bg);
   padding: 0.5rem;
 }
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  padding: 2rem;
+  text-align: center;
+  background: var(--bg);
+  border: 2px solid var(--fg);
+}
+
+.modal-content > * + * {
+  margin-top: 2rem;
+}
