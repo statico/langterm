@@ -4,7 +4,7 @@
 const api = (() => {
   const ENDPOINT = /langworth\.com/.test(document.location.hostname)
     ? "https://game.langworth.com"
-    : `http://${document.location.hostname}:8080`;
+    : `http://${document.location.hostname}:5050`;
 
   let sessionID;
 
@@ -31,7 +31,10 @@ const api = (() => {
       // If a response has `OPENURL:`, open that URL.
       const match = String(data.output).match(/OPENURL:(\S+)/);
       if (match) {
-        window.open(match[1]);
+        // window.open() just isn't reliable due to popup blockers and async
+        // stuff. Firefox on iOS still returns non-null from window.open() so
+        // there's no way to detect if the popup was blocked.
+        document.location.href = match[1];
         return "> ";
       } else {
         return data.output;
