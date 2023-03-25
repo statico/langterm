@@ -3,7 +3,7 @@
 //
 const fancyView = (() => {
   // Limit FPS to avoid melting GPUs.
-  const FPS = 15;
+  const FPS = 60;
 
   let assets,
     canvas,
@@ -40,6 +40,7 @@ const fancyView = (() => {
     compScreenSizeLocation,
     compTexCoordBuffer,
     compTexCoordLocation,
+    compDegaussTimeLocation,
     postFrameBuf,
     postPositionBuffer,
     postPositionLocation,
@@ -63,6 +64,8 @@ const fancyView = (() => {
     parameters = {
       startTime: Date.now(),
       time: 0,
+      startDegaussTime: Date.now(),
+      degaussTime: 0,
       screenWidth: 0,
       screenHeight: 0,
       gridWidth: 0,
@@ -85,7 +88,7 @@ const fancyView = (() => {
   };
 
   // Handle key events.
-  const keydown = async (e) => {
+  const handleKeydown = async (e) => {
     // Any key event resets the cursor blinking, like the Apple //e I think.
     parameters.startTime = Date.now();
 
@@ -403,6 +406,7 @@ ${fragment}`
 
     // Composition shader
     compProgram = createProgram(assets.compositeVert, assets.compositeFrag);
+    compDegaussTimeLocation = gl.getUniformLocation(compProgram, "uDegauss");
     compPostTexLocation = gl.getUniformLocation(compProgram, "uPostTex");
     compScreenSizeLocation = gl.getUniformLocation(compProgram, "uScreenSize");
     compBGSizeLocation = gl.getUniformLocation(compProgram, "uBGSize");
@@ -429,6 +433,7 @@ ${fragment}`
     // Render the terminal
 
     parameters.time = Date.now() - parameters.startTime;
+    parameters.degaussTime = Date.now() - parameters.startDegaussTime;
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, termFrameBuf);
     gl.viewport(0, 0, 2048, 2048);
@@ -534,6 +539,7 @@ ${fragment}`
     // Composite the terminal
 
     gl.useProgram(compProgram);
+    gl.uniform1f(compDegaussTimeLocation, parameters.degaussTime / 1000);
     gl.uniform2f(
       compScreenSizeLocation,
       parameters.screenWidth,
@@ -564,7 +570,7 @@ ${fragment}`
   };
 
   // Handle browser resize events.
-  const resize = () => {
+  const handleResize = () => {
     // This requires the canvas to be set at 100% width and height in CSS,
     // otherwise really weird stuff happens while resizing.
     const r = window.devicePixelRatio || 1;
@@ -574,6 +580,11 @@ ${fragment}`
       canvas.width = parameters.screenWidth = w;
       canvas.height = parameters.screenHeight = h;
     }
+  };
+
+  // Handle double clicks to activate degaussing.
+  const handleDoubleClick = (e) => {
+    parameters.startDegaussTime = Date.now();
   };
 
   // Set up fancy mode.
@@ -620,7 +631,7 @@ Password: **********\n\n`
     );
 
     // Uncomment to fill the terminal with #'s for positioning.
-    // term.fill('#')
+    // term.fill("#");
 
     parameters.gridWidth = term.width;
     parameters.gridHeight = term.height;
@@ -637,11 +648,16 @@ Password: **********\n\n`
     };
 
     initWebGL();
-    resize();
+    handleResize();
+
+    // Start degaussing as late as possible to complete the effect.
+    parameters.startDegaussTime = Date.now();
+
     animate();
 
-    window.addEventListener("resize", resize);
-    window.addEventListener("keydown", keydown);
+    window.addEventListener("resize", handleResize);
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("dblclick", handleDoubleClick);
     window.focus();
 
     try {
@@ -656,8 +672,9 @@ Password: **********\n\n`
 
   // Get rid of everything.
   const teardown = () => {
-    window.removeEventListener("keydown", keydown);
-    window.removeEventListener("resize", resize);
+    window.removeEventListener("resize", handleDoubleClick);
+    window.removeEventListener("keydown", handleKeydown);
+    window.removeEventListener("resize", handleResize);
     gl = null; // Stops animation.
     document.body.innerHTML = "";
   };

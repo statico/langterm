@@ -3,7 +3,7 @@
 uniform sampler2D uTermTex;
 varying mediump vec2 vTexCoord;
 
-// BEGIN SHADERTOY CODE -------------------------------------------------------------{{{1
+// BEGIN SHADERTOY CODE -------------------------------------------------------------
 
 //
 // PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER
@@ -176,7 +176,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
   fragColor.rgb = ToSrgb(fragColor.rgb);
 }
 
-// END SHADERTOY CODE ---------------------------------------------------------------1}}}
+// END SHADERTOY CODE ---------------------------------------------------------------
 
 // The real main() since this is ported from ShaderToy.
 void main() {
