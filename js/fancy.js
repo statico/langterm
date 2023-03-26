@@ -2,9 +2,6 @@
 // The fancy fake-CRT interface for desktop, non-touch users.
 //
 const fancyView = (() => {
-  // Limit FPS to avoid melting GPUs.
-  const FPS = 60;
-
   let assets,
     canvas,
     gl,
@@ -640,7 +637,11 @@ Password: **********\n\n`
     const animate = () => {
       if (!gl) return;
       const now = Date.now();
-      if (now - 1000 / FPS > lastFrame) {
+
+      // Degaussing looks good at 60 FPS, but other than that we're gonna melt GPUs.
+      const fps = now - parameters.startDegaussTime > 2000 ? 15 : 60;
+
+      if (now - 1000 / fps > lastFrame) {
         lastFrame = now;
         render();
       }
